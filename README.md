@@ -1,4 +1,4 @@
-# EventUSP - Task Management API
+# EventUSP
 
 Uma API  para a plataforma EventUSP. O projeto utiliza FastAPI para o backend, SQLModel para a persistência de dados.
 
