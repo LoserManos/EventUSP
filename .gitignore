@@ -1,0 +1,33 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+virenv/
+venv/
+ENV/
+env/
+.env
+
+# --- Banco de Dados ---
+# Como estamos usando SQLite, ignore o arquivo do banco para não subir dados de teste
+*.db
+*.sqlite3
+
+# --- Docker ---
+# Geralmente não ignoramos o Dockerfile/Compose, mas sim arquivos de log
+.docker-compose.log
+.docker/
+
+# --- Sistema Operacional ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editor de Código ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
