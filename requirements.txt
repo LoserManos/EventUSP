@@ -3,3 +3,6 @@ uvicorn[standard]
 sqlmodel
 python-jose
 passlib[bcrypt]
+pyjwt
+bcrypt
+pydantic[email]

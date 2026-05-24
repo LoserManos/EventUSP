@@ -18,14 +18,52 @@ class OrgRole(str,Enum):
     ADMIM = "admin"
     POSTER = "poster" ## acima do membro comum, pode postar eventos
     MEMBER = "member"
+class UserRole(str,Enum):
+    ADMIN = "admin"
+    COMMUN =  "commun"
 ### --------- ENUMS -------------- ###
+class Follower(SQLModel,table=True):
+    __tablename__ = "followers"
+    id_follower: int = Field(# Chave estrangeira de quem está seguindo (ex: o seu ID)
+        foreign_key="user.id", 
+        primary_key=True
+    )
+    id_following: int = Field(  # Chave estrangeira de quem está sendo seguido (ex: o ID de outro usuário)
+        foreign_key="user.id", 
+        primary_key=True
+    )
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class Likes(SQLModel,table=True):
+    __tablename__ = "likes"
+    id: Optional[int] = Field(default=None,primary_key = True)
+    user_id: int = Field(foreign_key="user.id")
+    event_id: int = Field(foreign_key="event.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Interests(SQLModel,table=True):
+    __tablename__ = "interests"
+    id: Optional[int] = Field(default=None,primary_key = True)
+    user_id: int = Field(foreign_key="user.id")
+    event_id: int = Field(foreign_key="event.id")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class MemberOrganization(SQLModel, table=True):
+    __tablename__ = "member_organization"
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    organization_id: int = Field(foreign_key="organization.id", primary_key=True)
+    role: OrgRole = Field(default=OrgRole.MEMBER)
+    status: bool = Field(default=False)     # Booleano de aprovação (com nome atualizado para 'status')
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
 class User(SQLModel,table = True):
     __tablename__ = "user" 
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     email: str
-    password: str #hash da senha 
+    password: str #hash da senha
+    bio: Optional[str] = Field(default=None) # bio opcional
+    role: UserRole = Field(default=UserRole.COMMUN) ## role do usuário se é admin ou é comum 
     picture_profile: Optional[str] = Field(default="static/defaults/user.jpg") ## preciso mudar, para colocar a pasta especifica 
     events_created: List["Event"] = Relationship(back_populates="creator") ## toda vez q associar um evento a um usuário colocar o evento aqui
     # Quem este usuário está seguindo (Lista de outros usuários)
@@ -61,7 +99,7 @@ class Event(SQLModel, table=True):
     local: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     creator: User = Relationship(back_populates="events_created")
-    likers: List["User"] = Relationship(link_model=EventLike, back_populates="liked_events")  # <-- Diz para o Python olhar o campo "liked_events" lá no User
+    likers: List["User"] = Relationship(link_model=Likes, back_populates="liked_events")  # <-- Diz para o Python olhar o campo "liked_events" lá no User
     interested: List["Event"] = Relationship(link_model=Interests,back_populates="interested_events")
     comments: List["Comment"] = Relationship(back_populates="event")
     members: List["User"] = Relationship(link_model=MemberOrganization, back_populates="organizations")
@@ -73,49 +111,12 @@ class Category(SQLModel,table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     events: List["Event"] = Relationship(back_populates="organization") # Relacionamento: Uma categoria pode ter vários eventos atrelados
 
-class Follower(SQLModel,table=True):
-    __tablename__ = "followers"
-    id_follower: int = Field(# Chave estrangeira de quem está seguindo (ex: o seu ID)
-        foreign_key="user.id", 
-        primary_key=True
-    )
-    id_following: int = Field(  # Chave estrangeira de quem está sendo seguido (ex: o ID de outro usuário)
-        foreign_key="user.id", 
-        primary_key=True
-    )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-class Likes(SQLModel,table=True):
-    __tablename__ = "likes"
-    id: int[Optional] = Field(default=None,primary_key = True)
-    user_id: int = Field(foreign_key="user.id")
-    event_id: int = Field(foreign_key="event.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-class Interests(SQLModel,table=True):
-    __tablename__ = "interests"
-    id: int[Optional] = Field(default=None,primary_key = True)
-    user_id: int = Field(foreign_key="user.id")
-    event_id: int = Field(foreign_key="event.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
 class Comment(SQLModel,table=True):
     __tablename__ = "comments"
-    id: int[Optional] = Field(default=None,primary_key = True)
+    id: Optional[int] = Field(default=None,primary_key = True)
     user_id: int = Field(foreign_key="user.id")
     event_id: int = Field(foreign_key="event.id")
     content: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     author: "User" = Relationship(back_populates="comments_made")
     event: "Event" = Relationship(back_populates="comments")
-
-class MemberOrganization(SQLModel, table=True):
-    __tablename__ = "member_organization"
-    user_id: int = Field(foreign_key="user.id", primary_key=True)
-    organization_id: int = Field(foreign_key="organization.id", primary_key=True)
-    role: OrgRole = Field(default=OrgRole.MEMBER)
-    status: bool = Field(default=False)     # Booleano de aprovação (com nome atualizado para 'status')
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-
-
