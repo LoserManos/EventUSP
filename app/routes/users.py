@@ -7,6 +7,7 @@ from app.database import get_session
 from app.models import User, Follower
 from app.security import get_actual_user 
 from app.schemas import UserUpdateSchema, UserResponseSchema
+from typing import List
 
 router = APIRouter(
     prefix="/usuarios",
@@ -108,6 +109,24 @@ def unfollow_user(id_following: int, current_user: User = Depends(get_actual_use
     session.delete(db_follow)
     session.commit()
     return {"mensagem": f"Você deixou de seguir o usuário {id_following}", "seguindo_id": id_following}
+
+# Listar Seguidores
+@router.get("/{user_id}/seguidores", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def get_followers(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    return user.followers
+
+# Listar Seguindo (Quem o usuário segue)
+@router.get("/{user_id}/seguindo", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def get_following(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    return user.following
   
 ### ATENÇÃO LEO! QUANDO FOR MECHER AQUI SIGA O MEDELO QUE ESTÁ NO AUTH.PY PARA PADRONIZAR O PROJETO
 ### SEGUIR O MODELO, ESTOU QUERENDO DIZER PARA CRIAR TIPOS PARA OS ARGUMENTOS DE CADA FUNÇÃO E CRIAR TIPOS PARA OS RETURNS(SE QUISER SABER O PQ MANDA UM SALVE NO ZAP)
