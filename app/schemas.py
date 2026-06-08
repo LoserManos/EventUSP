@@ -10,7 +10,7 @@ class SingupRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-    bio: Optional[str]
+    bio: Optional[str] = None
 class SingupResponse(BaseModel):
     id: int
     name: str
