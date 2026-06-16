@@ -23,6 +23,10 @@ def singup(singup_data:SingupRequest,session = Depends(get_session)):
     user = session.exec(query).first()
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este e-mail já está cadastrado no sistema.")
+    query= select(User).where(User.name == singup_data.name)
+    user = session.exec(query).first()
+    if user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este nome de usuário já está cadastrado no sistema.")    
     criptd_passord = generate_hash_password(singup_data.password)
     new_user = User(name=singup_data.name,email=singup_data.email,password = criptd_passord,bio = singup_data.bio)
     session.add(new_user)

@@ -52,8 +52,8 @@ class MemberOrganization(SQLModel, table=True):
 class User(SQLModel,table = True):
     __tablename__ = "user" 
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    email: str
+    name: str = Field(unique = True) # nome de usuário é único (deveria colcoar um nickname e deixar name sem unico???)
+    email: str = Field(unique = True)
     password: str #hash da senha
     bio: Optional[str] = Field(default=None) # bio opcional
     created_at: datetime = Field(default_factory=datetime.utcnow) # quando foi criado
