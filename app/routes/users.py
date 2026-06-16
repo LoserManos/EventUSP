@@ -62,7 +62,7 @@ async def upload_user_photo(
     db_path = f"static/defaults/{file_name}"
     
     # Atualiza o model com a nova foto
-    current_user.foto_perfil = db_path
+    current_user.picture_profile = db_path
     session.add(current_user)
     session.commit()
     session.refresh(current_user)
