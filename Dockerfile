@@ -1,11 +1,11 @@
 FROM python:3.13-slim
 
-WORKDIR /app
+WORKDIR /workspace
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /workspace
 
 # Expõe a porta que o FastAPI usa
 EXPOSE 8000

@@ -23,6 +23,9 @@ def popular_categorias_iniciais():
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables() ##cria as tabelas do banco de dados(se não existirem)
+    popular_categorias_iniciais() ## cria as catogrias iniciais
+
+
 
 @app.get("/")
 def root():
