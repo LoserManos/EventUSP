@@ -1,12 +1,24 @@
 from fastapi import FastAPI
-from app.database import get_session, create_db_and_tables
+from sqlmodel import Session, select
+from app.database import get_session, create_db_and_tables, engine
 from app.routes import auth,events,users
+from app.models import Category, CategoryType
 app = FastAPI()
 
 app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(auth.router) ## inclui as rotas do auth no arquivo principal
 
+def popular_categorias_iniciais():
+    """Lê o Enum CategoryType e cria todas as categorias no banco automaticamente."""
+    with Session(engine) as session:
+        for tipo_enum in CategoryType:
+            # Verifica se essa categoria já existe no banco para não duplicar
+            categoria_existente = session.exec(select(Category).where(Category.type == tipo_enum)).first()
+            if not categoria_existente:
+                nova_categoria = Category(type=tipo_enum)
+                session.add(nova_categoria)
+        session.commit()
 
 @app.on_event("startup")
 def on_startup():

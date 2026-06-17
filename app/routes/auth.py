@@ -10,7 +10,7 @@ router = APIRouter(tags=["Autenticação"])
 
 @router.post("/auth/login",status_code=status.HTTP_200_OK,response_model=TokenResponse)
 def login(login_data: LoginRequest,session = Depends(get_session)):
-    query = select(User).where(login_data.email==login_data.email)
+    query = select(User).where(User.email==login_data.email)
     user = session.exec(query).first()
     if not user or not verify_password(login_data.password,user.password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="E-mail ou senha incorretos")
