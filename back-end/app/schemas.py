@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 
@@ -46,10 +46,17 @@ class EventCreateSchema(BaseModel):
     """Molde de entrada: Dados estritamente necessários para criar um evento."""
     title: str
     start_date: datetime
-    duration: int
+    duration: int = Field(gt=0, description="A duração deve ser maior que zero minutos")
     local: str
     category_id: int
     organization_id: Optional[int] = None
+
+    @field_validator('start_date')
+    @classmethod
+    def validar_data_futura(cls, valor_data: datetime):
+        if valor_data.replace(tzinfo=None) < datetime.now().replace(tzinfo=None):
+            raise ValueError('A data do evento não pode estar no passado.')
+        return valor_data
 
 class EventUpdateSchema(BaseModel):
     """Molde de entrada: Todos os campos são opcionais para permitir edições parciais."""
