@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 
-export default function AddMealScreen() {
+export default function CreateEventScreen() {
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -45,7 +45,7 @@ export default function AddMealScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Add Meal</Text>
+      <Text style={globalStyles.title}>Create Event</Text>
 
       <TextInput
         style={styles.input}
