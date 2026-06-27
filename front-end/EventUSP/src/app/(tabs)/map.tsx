@@ -5,7 +5,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-export default function AllMealsScreen() {
+export default function MapScreen() {
   const [meals, setMeals] = useState<Meal[]>([]);
 
   const loadMeals = async () => {
@@ -27,7 +27,7 @@ export default function AllMealsScreen() {
   return (
     <ScrollView style={globalStyles.container}>
       <View style={globalStyles.header}>
-        <Text style={globalStyles.title}>All Meals</Text>
+        <Text style={globalStyles.title}>Mapa</Text>
         <TouchableOpacity onPress={handleClearAll}>
           <Text style={styles.clearButton}>Clear All</Text>
         </TouchableOpacity>
