@@ -21,5 +21,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
     marginBottom: 30,
+    fontFamily: 'Montserrat',
   },
 });

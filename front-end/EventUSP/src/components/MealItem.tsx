@@ -57,10 +57,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.textPrimaryDark,
+    fontFamily: 'Montserrat',
   },
   macros: {
     fontSize: 13,
     color: colors.textSecondary,
     marginTop: 4,
+    fontFamily: 'Montserrat',
   },
 });

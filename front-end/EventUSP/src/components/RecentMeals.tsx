@@ -39,9 +39,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ffffff',
     marginBottom: 16,
+    fontFamily: 'Montserrat',
   },
   empty: {
     color: '#a0a0b0',
     fontSize: 14,
+    fontFamily: 'Montserrat',
   },
 });

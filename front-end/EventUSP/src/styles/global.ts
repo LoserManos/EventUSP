@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { useFonts, Montserrat_400Regular, Montserrat_700Bold } from '@expo-google-fonts/montserrat';
 
 export const colors = {
   backgroundDark: '#231F20',
@@ -25,11 +26,12 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: colors.backgroundDark,
     paddingTop: 60,
     paddingHorizontal: 20,
+    fontFamily: "Montserrat_400Regular",
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.textPrimaryDark,
+    color: "#fcb827",
+    fontFamily: "Montserrat_700Bold",
   },
   sectionTitle: {
     fontSize: 18,
@@ -37,10 +39,12 @@ export const globalStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 30,
     marginBottom: 16,
+    fontFamily: "Montserrat_400Regular",
   },
   empty: {
     color: colors.textSecondary,
     fontSize: 14,
+    fontFamily: "Montserrat_400Regular",
   },
   header: {
     flexDirection: 'row',
