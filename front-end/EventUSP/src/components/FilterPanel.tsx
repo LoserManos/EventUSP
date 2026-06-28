@@ -1,6 +1,7 @@
 import { colors, globalStyles } from '@/styles/global';
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { EventFilters } from '@/storage/eventAPI';
 
 // Espelho do enum CategoryType do models.py
 const CATEGORY_TYPES = [
@@ -8,9 +9,14 @@ const CATEGORY_TYPES = [
   "congress", "social", "religion", "academic"
 ];
 
-export default function FilterPanel() {
+interface FilterPanelProps {
+  onApplyFilters: (filtros: EventFilters) => void;
+  currentFilters: EventFilters;
+}
+
+export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPanelProps) {
   // Estados para capturar os inputs do usuário
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState(currentFilters.categoria);
   const [orgName, setOrgName] = useState('');
   const [creatorName, setCreatorName] = useState('');
 
@@ -153,11 +159,23 @@ export default function FilterPanel() {
         </View>
       </View>
 
-      {/* Botão de Aplicar (simulação) */}
-      <Pressable style={styles.applyButton}>
+      <Pressable 
+        style={styles.applyButton}
+        onPress={() => {
+          onApplyFilters({
+            categoria: selectedCategory,
+            orgName,
+            creatorName,
+            dateAfter,
+            dateBefore,
+            timeAfter,
+            timeBefore,
+            sortBy
+          });
+        }}
+      >
         <Text style={styles.applyButtonText}>Aplicar Filtros</Text>
       </Pressable>
-
     </ScrollView>
   );
 }
