@@ -33,16 +33,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     color: '#a0a0b0',
+    fontFamily: 'Montserrat',
   },
   value: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
     marginTop: 4,
+    fontFamily: 'Montserrat',
   },
   goal: {
     fontSize: 14,
     color: '#a0a0b0',
     marginTop: 2,
+    fontFamily: 'Montserrat',
   },
 });

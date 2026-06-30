@@ -1,5 +1,6 @@
 import { colors } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
@@ -9,7 +10,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.backgroundDark,
-          borderTopColor: colors.backgroundSecondary,
+          borderTopColor: colors.backgroundDarkSecondary,
         },
         tabBarActiveTintColor: colors.orangePrimary,
         tabBarInactiveTintColor: colors.orangeSecondary,
@@ -25,20 +26,38 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='add-meal'
+        name='search'
         options={{
-          title: 'Add Meal',
+          title: 'Busca',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='add-circle' size={size} color={color} />
+            <Ionicons name='search' size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name='meals'
+        name='map'
         options={{
-          title: 'All Meals',
+          title: 'Mapa',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='list' size={size} color={color} />
+            <FontAwesome6 name='compass' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name='social'
+        options={{
+          title: 'Social',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name='person' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name='create-event'
+        options={{
+          title: 'Criar Evento',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name='add-circle' size={size} color={color} />
           ),
         }}
       />

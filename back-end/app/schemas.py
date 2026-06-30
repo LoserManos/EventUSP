@@ -57,6 +57,14 @@ class EventCreateSchema(BaseModel):
         if valor_data.replace(tzinfo=None) < datetime.now().replace(tzinfo=None):
             raise ValueError('A data do evento não pode estar no passado.')
         return valor_data
+    
+    @field_validator('title', 'local')
+    @classmethod
+    def validar_strings_vazias(cls, value: str):
+        texto_limpo = value.strip() # Remove espaços do começo e do fim
+        if not texto_limpo:
+            raise ValueError('Este campo não pode estar vazio ou conter apenas espaços em branco.')
+        return texto_limpo # Retorna o texto limpo para ser salvo no banco
 
 class EventUpdateSchema(BaseModel):
     """Molde de entrada: Todos os campos são opcionais para permitir edições parciais."""
