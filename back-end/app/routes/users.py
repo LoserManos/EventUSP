@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
+from sqlmodel import Session, select,func
 import os
 import shutil
-
+from typing import Optional
 from app.database import get_session
 from app.models import User, Follower
 from app.security import get_actual_user 
-from app.schemas import UserUpdateSchema, UserResponseSchema
+from app.schemas import UserUpdateSchema, UserResponseSchema, PaginatedUserResponse
 from typing import List
 
 router = APIRouter(
@@ -14,6 +14,22 @@ router = APIRouter(
     tags=["Usuários"]
 )
 
+@router.get("/",status_code=status.HTTP_200_OK,response_model=PaginatedUserResponse) ## lista os usuários com filtro opcional.
+def list_users(current_user: User = Depends(get_actual_user),page: int = Query(1, ge=1), limit: int = Query(20, ge=1, le=100),search: Optional[str] = None,session: Session = Depends(get_session)):
+    offset = (page - 1) * limit
+    query = select(User)
+    if search:
+        query = query.where(User.name.ilike("%"+search+"%"))     
+    users = session.exec(query.offset(offset).limit(limit)).all()
+    total_records = session.exec(select(func.count()).select_from(query.subquery())).one() ## pega a quantidade total de user registrados(talvez isso vai deixar a paginação lenta, mudar????)
+    return {
+        "current_page": page,
+        "limit":limit,
+        "total_records": total_records,
+        "data": users,
+        "total_pages": (total_records + limit - 1) // limit ## total de paginas com o limite atual
+    }
+    
 ### --- ROTAS DO PRÓPRIO USUÁRIO LOGADO (/me) --- ###
 
 # Visualizar Meu Perfil 

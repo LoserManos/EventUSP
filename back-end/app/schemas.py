@@ -99,3 +99,10 @@ class PaginatedEventResponse(BaseModel):
     pagina_atual: int
     total_eventos: Optional[int] = None
     dados: List[EventResponseSchema]
+
+class PaginatedUserResponse(BaseModel):
+    current_page: int
+    limit: int
+    total_records: int 
+    total_pages: int
+    data: List[UserResponseSchema]
