@@ -148,3 +148,27 @@ def test_criar_evento_data_passada(client):
     
     assert response.status_code == 422
     assert "start_date" in response.text # Confirma se o erro apontou para a data
+
+def test_criar_evento_com_strings_vazias(client):
+    """Garante que a API bloqueia a criação de eventos com título ou local só de espaços."""
+    
+    user_body = {"name": "Goku", "email": "goku@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json=user_body).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Tentativa de burlar a validação com espaços em branco
+    event_body = {
+        "title": "     ", 
+        "start_date": "2026-10-10T10:00:00",
+        "duration": 120,
+        "local": " \n \t ", # Tentando burlar com espaços, quebras de linha e tabs
+        "category_id": 1
+    }
+    
+    response = client.post("/eventos/", json=event_body, headers=headers)
+    
+    # O Pydantic deve barrar com Erro 422
+    assert response.status_code == 422
+    assert "title" in response.text
+    assert "local" in response.text
