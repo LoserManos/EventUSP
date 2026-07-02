@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 
@@ -6,12 +6,12 @@ class LoginRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-class SingupRequest(BaseModel):
+class SignupRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
     bio: Optional[str] = None
-class SingupResponse(BaseModel):
+class SignupResponse(BaseModel):
     id: int
     name: str
     email: EmailStr
@@ -70,10 +70,30 @@ class EventUpdateSchema(BaseModel):
     """Molde de entrada: Todos os campos são opcionais para permitir edições parciais."""
     title: Optional[str] = None
     start_date: Optional[datetime] = None
-    duration: Optional[int] = None
+    duration: Optional[int] = Field(default=None, gt=0, description="A duração deve ser maior que zero minutos")
     local: Optional[str] = None
     category_id: Optional[int] = None
     organization_id: Optional[int] = None
+
+    @field_validator('title', 'local')
+    @classmethod
+    def validar_strings_vazias(cls, value: Optional[str]):
+        if value is not None:
+            texto_limpo = value.strip()
+            if not texto_limpo:
+                raise ValueError('Este campo não pode estar vazio ou conter apenas espaços em branco.')
+            return texto_limpo
+        return value
+
+    @field_validator('start_date')
+    @classmethod
+    def validar_data_futura(cls, valor_data: Optional[datetime]):
+        if valor_data is not None:
+            if valor_data.replace(tzinfo=None) < datetime.now().replace(tzinfo=None):
+                raise ValueError('A data do evento não pode estar no passado.')
+        return valor_data
+
+    model_config = ConfigDict(from_attributes=True)
 
 class EventResponseSchema(BaseModel):
     """Molde de saída: Como o evento será devolvido na listagem (Feed) e detalhes."""

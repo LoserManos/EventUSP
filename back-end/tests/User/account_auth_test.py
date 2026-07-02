@@ -7,7 +7,7 @@ def test_create_account(client,db_session:Session):
     
     body = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
 
-    response = client.post("/auth/singup",json=body)
+    response = client.post("/auth/signup",json=body)
     dataResponse = response.json()
     assert response.status_code == 201
     assert dataResponse["name"] == "nattan"
@@ -24,7 +24,7 @@ def test_create_account_no_bio(client,db_session:Session):
     
     body = {"name": "nattan","email": "nattan@gmail.com","password":"123"}
 
-    response = client.post("/auth/singup",json=body)
+    response = client.post("/auth/signup",json=body)
     dataResponse = response.json()
     assert response.status_code == 201
     assert dataResponse["name"] == "nattan"
@@ -39,10 +39,10 @@ def test_create_account_same_email(client,db_session:Session):
     
     user1 = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
 
-    client.post("/auth/singup",json=user1)
+    client.post("/auth/signup",json=user1)
     user2 = {"name": "leonardo","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
 
-    response = client.post("/auth/singup",json=user2)
+    response = client.post("/auth/signup",json=user2)
     dataResponse = response.json()
     assert response.status_code == 400
 
@@ -50,9 +50,9 @@ def test_create_account_same_email(client,db_session:Session):
 def test_create_account_same_name(client,db_session:Session):
     
     user1 = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
-    client.post("/auth/singup",json=user1)
+    client.post("/auth/signup",json=user1)
     user2 = {"name": "nattan","email": "n@gmail.com","password":"123","bio": "lalalala"}
-    response = client.post("/auth/singup",json=user2)
+    response = client.post("/auth/signup",json=user2)
     dataResponse = response.json()
     assert response.status_code == 400
 
@@ -61,7 +61,7 @@ def test_create_account_same_name(client,db_session:Session):
 def test_login(client,db_session:Session):
     
     user = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
-    client.post("/auth/singup",json=user)
+    client.post("/auth/signup",json=user)
     login = {"name": "nattan","email": "nattan@gmail.com","password":"123",}
     res = client.post("/auth/login",json=login)
     dataRes = res.json()
@@ -78,7 +78,7 @@ def test_login(client,db_session:Session):
 def test_login(client,db_session:Session):
     
     user = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
-    client.post("/auth/singup",json=user)
+    client.post("/auth/signup",json=user)
     login = {"name": "nattan","email": "nattan@gmail.com","password":"1234",}
     res = client.post("/auth/login",json=login)
     assert res.status_code == 400
@@ -88,7 +88,7 @@ def test_login(client,db_session:Session):
 def test_login(client,db_session:Session):
     
     user = {"name": "nattan","email": "nattan@gmail.com","password":"123","bio": "lalalala"}
-    client.post("/auth/singup",json=user)
+    client.post("/auth/signup",json=user)
     login = {"name": "nattan","email": "natt@gmail.com","password":"1234",}
     res = client.post("/auth/login",json=login)
     assert res.status_code == 400

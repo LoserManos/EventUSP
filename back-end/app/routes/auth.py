@@ -3,7 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException, status,APIRouter
 from sqlmodel import Session, select
 from app.database import get_session
 from app.models import User
-from app.schemas import LoginRequest, TokenResponse,SingupRequest,SingupResponse
+from app.schemas import LoginRequest, TokenResponse,SignupRequest,SignupResponse
 
 # criando o router
 router = APIRouter(tags=["Autenticação"])
@@ -17,20 +17,20 @@ def login(login_data: LoginRequest,session = Depends(get_session)):
     token = create_access_token({"sub":str(user.id)})
     return {"access_token":token,"token_type":"bearer","id_user":user.id}
  
-@router.post("/auth/singup",status_code=status.HTTP_201_CREATED,response_model=SingupResponse)
-def singup(singup_data:SingupRequest,session = Depends(get_session)):
-    if(len(singup_data.name)==0):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="campo nome não pode ficar vazio")
-    query = select(User).where(User.email==singup_data.email)
+@router.post("/auth/signup",status_code=status.HTTP_201_CREATED,response_model=SignupResponse)
+def signup(signup_data:SignupRequest,session = Depends(get_session)):
+    if(len(signup_data.name)==0):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Campo nome não pode ficar vazio")
+    query = select(User).where(User.email==signup_data.email)
     user = session.exec(query).first()
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este e-mail já está cadastrado no sistema.")
-    query= select(User).where(User.name == singup_data.name)
+    query= select(User).where(User.name == signup_data.name)
     user = session.exec(query).first()
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este nome de usuário já está cadastrado no sistema.")    
-    criptd_passord = generate_hash_password(singup_data.password)
-    new_user = User(name=singup_data.name,email=singup_data.email,password = criptd_passord,bio = singup_data.bio)
+    criptd_passord = generate_hash_password(signup_data.password)
+    new_user = User(name=signup_data.name,email=signup_data.email,password = criptd_passord,bio = signup_data.bio)
     session.add(new_user)
     session.commit()
     session.refresh(new_user)

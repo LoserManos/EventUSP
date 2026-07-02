@@ -9,18 +9,18 @@ def test_listar_eventos_seguindo(client):
     
     # Perfil A: O Amigo (Vamos segui-lo)
     amigo_body = {"name": "Amigo", "email": "amigo@teste.com", "password": "123"}
-    resp_amigo = client.post("/auth/singup", json=amigo_body)
+    resp_amigo = client.post("/auth/signup", json=amigo_body)
     id_amigo = resp_amigo.json()["id"]
     token_amigo = client.post("/auth/login", json=amigo_body).json()["access_token"]
 
     # Perfil B: O Desconhecido (não vamos segui-lo)
     desc_body = {"name": "Desconhecido", "email": "desc@teste.com", "password": "123"}
-    client.post("/auth/singup", json=desc_body)
+    client.post("/auth/signup", json=desc_body)
     token_desc = client.post("/auth/login", json=desc_body).json()["access_token"]
 
     # Nosso Perfil Logado
     eu_body = {"name": "Eu", "email": "eu@teste.com", "password": "123"}
-    client.post("/auth/singup", json=eu_body)
+    client.post("/auth/signup", json=eu_body)
     token_eu = client.post("/auth/login", json=eu_body).json()["access_token"]
     headers_eu = {"Authorization": f"Bearer {token_eu}"}
 
@@ -47,7 +47,7 @@ def test_listar_eventos_seguindo_vazio(client):
     
     # Criar e logar com um usuário isolado
     lobo_body = {"name": "Lobo Solitario", "email": "lobo@teste.com", "password": "123"}
-    client.post("/auth/singup", json=lobo_body)
+    client.post("/auth/signup", json=lobo_body)
     token_lobo = client.post("/auth/login", json=lobo_body).json()["access_token"]
     
     # Buscar o feed sem ter seguido ninguém
@@ -71,13 +71,13 @@ def test_listar_eventos_busca_parcial(client):
     """Garante que a busca funciona enviando apenas um pedaço do nome do evento."""
     
     user_body = {"name": "Eu", "email": "eu@teste.com", "password": "123"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # Criar dois eventos: um com "Junina" no nome e outro sem
-    client.post("/eventos/", json={"title": "Festa Junina da FAU", "start_date": "2026-06-25T19:00:00", "duration": 300, "local": "Pátio", "category_id": 1}, headers=headers)
-    client.post("/eventos/", json={"title": "Arraiá da Bio", "start_date": "2026-06-26T19:00:00", "duration": 300, "local": "Pátio", "category_id": 1}, headers=headers)
+    client.post("/eventos/", json={"title": "Festa Junina da FAU", "start_date": "2027-06-25T19:00:00", "duration": 300, "local": "Pátio", "category_id": 1}, headers=headers)
+    client.post("/eventos/", json={"title": "Arraiá da Bio", "start_date": "2027-06-26T19:00:00", "duration": 300, "local": "Pátio", "category_id": 1}, headers=headers)
 
     # O usuário pesquisa apenas por "Junina"
     response = client.get("/eventos/?busca=Junina")
@@ -92,13 +92,13 @@ def test_listar_eventos_busca_combinada(client):
     """Garante que a combinação de busca de texto com categoria cruza os filtros (AND)."""
     
     user_body = {"name": "Lucas Aura", "email": "aura@teste.com", "password": "123"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    client.post("/eventos/", json={"title": "Festa Junina", "start_date": "2026-06-25T19:00:00", "duration": 300, "local": "Faculdade de Arquitetura e Urbanismo", "category_id": 1}, headers=headers)
-    client.post("/eventos/", json={"title": "Festa Halloween", "start_date": "2026-10-31T20:00:00", "duration": 300, "local": "Vão da FFLCH", "category_id": 1}, headers=headers)
-    client.post("/eventos/", json={"title": "Treino pré Festa Junina", "start_date": "2026-06-20T10:00:00", "duration": 120, "local": "CEPEUSP", "category_id": 2}, headers=headers)
+    client.post("/eventos/", json={"title": "Festa Junina", "start_date": "2027-06-25T19:00:00", "duration": 300, "local": "Faculdade de Arquitetura e Urbanismo", "category_id": 1}, headers=headers)
+    client.post("/eventos/", json={"title": "Festa Halloween", "start_date": "2027-10-31T20:00:00", "duration": 300, "local": "Vão da FFLCH", "category_id": 1}, headers=headers)
+    client.post("/eventos/", json={"title": "Treino pré Festa Junina", "start_date": "2027-06-20T10:00:00", "duration": 120, "local": "CEPEUSP", "category_id": 2}, headers=headers)
 
     # Buscar combinando os filtros (busca + category_id)
     response = client.get("/eventos/?busca=Junina&category_id=1")

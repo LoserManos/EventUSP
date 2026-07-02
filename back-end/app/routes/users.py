@@ -107,7 +107,10 @@ def follow_user(id_following: int, current_user: User = Depends(get_actual_user)
     db_follow = session.exec(stmt).first()
     if db_follow:
         return {"mensagem": "Você já segue este usuário."}
-        
+    query = select(User).where(User.id==id_following)
+    user = session.exec(query).first()
+    if not user:
+        raise HTTPException(status_code=400,detail="Não é possível seguir um usuário inexistente.")        
     new_follow = Follower(id_follower=current_user.id, id_following=id_following)
     session.add(new_follow)
     session.commit()
@@ -120,7 +123,7 @@ def unfollow_user(id_following: int, current_user: User = Depends(get_actual_use
     stmt = select(Follower).where(Follower.id_follower == current_user.id, Follower.id_following == id_following)
     db_follow = session.exec(stmt).first()
     if not db_follow:
-        raise HTTPException(status_code=404, detail="Você não segue este usuário.")
+        raise HTTPException(status_code=404, detail="Usuário não encontrado ou ainda não segue este usuário.")
         
     session.delete(db_follow)
     session.commit()

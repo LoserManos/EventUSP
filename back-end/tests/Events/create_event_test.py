@@ -9,7 +9,7 @@ def test_criar_evento_com_sucesso(client, db_session: Session):
         "password": "senha",
         "bio": "Testando rotas de eventos"
     }
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     login_response = client.post("/auth/login", json=user_body)
     token = login_response.json()["access_token"]
 
@@ -82,7 +82,7 @@ def test_criar_evento_dados_incompletos(client):
     """Garante que a API bloqueia a criação se faltarem campos obrigatórios (ex: título e local)."""
     
     user_body = {"name": "Pica-Pau", "email": "picapau@teste.com", "password": "senha"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     login_response = client.post("/auth/login", json=user_body)
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -110,7 +110,7 @@ def test_criar_evento_duracao_negativa(client):
     """Garante que o Pydantic barra eventos com duração zero ou negativa."""
     
     user_body = {"name": "Xablau", "email": "xablau@teste.com", "password": "senha"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -131,7 +131,7 @@ def test_criar_evento_data_passada(client):
     """Garante que o Pydantic barra a criação de eventos que já aconteceram."""
     
     user_body = {"name": "Viajante_do_tempo", "email": "tempo@teste.com", "password": "senha"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -148,3 +148,27 @@ def test_criar_evento_data_passada(client):
     
     assert response.status_code == 422
     assert "start_date" in response.text # Confirma se o erro apontou para a data
+
+def test_criar_evento_com_strings_vazias(client):
+    """Garante que a API bloqueia a criação de eventos com título ou local só de espaços."""
+    
+    user_body = {"name": "Goku", "email": "goku@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json=user_body).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Tentativa de burlar a validação com espaços em branco
+    event_body = {
+        "title": "     ", 
+        "start_date": "2026-10-10T10:00:00",
+        "duration": 120,
+        "local": " \n \t ", # Tentando burlar com espaços, quebras de linha e tabs
+        "category_id": 1
+    }
+    
+    response = client.post("/eventos/", json=event_body, headers=headers)
+    
+    # O Pydantic deve barrar com Erro 422
+    assert response.status_code == 422
+    assert "title" in response.text
+    assert "local" in response.text

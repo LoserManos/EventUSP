@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc, asc, func
 from typing import Optional
 import os
 import shutil
@@ -34,15 +34,24 @@ def list_events(
     limite: int = Query(20, ge=1, le=100),
     busca: Optional[str] = None,
     category_id: Optional[int] = None,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    most_recent: Optional[bool] = False,
+    most_likes: Optional[bool]  = False,
+    closest: Optional[bool] = False
 ):
     offset = (pagina - 1) * limite
     query = select(Event)
     
     if busca:
         query = query.where(Event.title.contains(busca))
-    if category_id:
+    elif category_id:
         query = query.where(Event.category_id == category_id)
+    elif most_recent:
+        query.order_by(desc(Event.created_at))
+    elif most_likes:
+        query.order_by(asc(Event.likes))
+    elif closest: ## por evento mais próximo(em módulo) da data atual
+        query.order_by(asc(abs(func.now()-Event.start_date)))
         
     total_eventos = len(session.exec(query).all())
     eventos = session.exec(query.offset(offset).limit(limite)).all()

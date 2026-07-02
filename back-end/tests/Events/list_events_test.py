@@ -6,7 +6,7 @@ def test_listar_eventos_paginacao(client):
     """Garante que o feed retorna a quantidade correta de eventos e calcula o total."""
     
     user_body = {"name": "Espectador", "email": "feed@teste.com", "password": "senha"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -34,7 +34,7 @@ def test_listar_eventos_filtros(client):
     """Garante que os filtros de busca por texto e categoria funcionam no Feed."""
 
     user_body = {"name": "Divulgador", "email": "divulga@teste.com", "password": "123"}
-    client.post("/auth/singup", json=user_body)
+    client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json=user_body).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
