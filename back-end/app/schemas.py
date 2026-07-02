@@ -3,17 +3,18 @@ from datetime import datetime
 from typing import Optional, List
 
 class LoginRequest(BaseModel):
-    name: str
     email: EmailStr
     password: str
 class SignupRequest(BaseModel):
     name: str
+    nickname: str
     email: EmailStr
     password: str
     bio: Optional[str] = None
 class SignupResponse(BaseModel):
     id: int
     name: str
+    nickname: str
     email: EmailStr
     bio: Optional[str]
     created_at: datetime
@@ -29,6 +30,7 @@ class UserResponseSchema(BaseModel):
     """Molde de saída: O que é devolvido quando se pede o perfil de um utilizador."""
     id: int
     name: str
+    nickname: str
     email: EmailStr
     bio: Optional[str] = None
     role: str
@@ -39,6 +41,7 @@ class UserResponseSchema(BaseModel):
 class UserUpdateSchema(BaseModel):
     """Molde de entrada: O que o utilizador pode enviar para editar o próprio perfil."""
     name: Optional[str] = None
+    nickname: Optional[str] = None
     bio: Optional[str] = None
     # Não inclui 'email' ou 'password' aqui por segurança (são tratados na autenticação).
 

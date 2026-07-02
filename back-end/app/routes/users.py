@@ -22,12 +22,17 @@ def get_my_profile(current_user: User = Depends(get_actual_user)):
     return current_user
 
 # Editar Meu Perfil
-@router.patch("/me", response_model=UserResponseSchema)
+@router.patch("/me", response_model=UserResponseSchema,status_code=status.HTTP_200_OK)
 def update_profile(user_data: UserUpdateSchema, current_user: User = Depends(get_actual_user), session: Session = Depends(get_session)):
     # Atualiza apenas os campos enviados no JSON
     for key, value in user_data.items():
         # Não deixa o usuário alterar ID, email ou senha por aqui. Vou deixar emaill e senha pra ser auterado na autentificação tb
         if hasattr(current_user, key) and key not in ["id", "created_at", "password", "email", "role"]:
+            if key == "nickname":
+                query = select(User).where(User.nickname==key)
+                user = session.exec(query).first()
+                if user:
+                    raise HTTPException(status_code=403,detail="Apelido de usuário já em uso!")
             setattr(current_user, key, value)
             
     session.add(current_user)

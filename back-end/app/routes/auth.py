@@ -19,13 +19,13 @@ def login(login_data: LoginRequest,session = Depends(get_session)):
  
 @router.post("/auth/signup",status_code=status.HTTP_201_CREATED,response_model=SignupResponse)
 def signup(signup_data:SignupRequest,session = Depends(get_session)):
-    if(len(signup_data.name)==0):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Campo nome não pode ficar vazio")
+    if(len(signup_data.name)==0 or len(signup_data.nickname==0) or len(signup_data.password)==0 or len(signup_data.email)==0):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Nenhum campo obrigatório pode ser vazio.")
     query = select(User).where(User.email==signup_data.email)
     user = session.exec(query).first()
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este e-mail já está cadastrado no sistema.")
-    query= select(User).where(User.name == signup_data.name)
+    query= select(User).where(User.nickname == signup_data.nickname)
     user = session.exec(query).first()
     if user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail="Este nome de usuário já está cadastrado no sistema.")    
