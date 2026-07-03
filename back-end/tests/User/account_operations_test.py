@@ -118,6 +118,22 @@ def test_follow_nobody(auth_client,client,db_session):
     assert res.status_code == 200
     assert dtres["mensagem"] == "Você já segue este usuário"
 
+## cenario 13: editar meu perfil enviando apenas espaços em branco, deve retornar 422
+def test_edit_profile_espacos_vazios(client):
+    user_body = {"name": "Editor Vazio", "email": "editor_vazio@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json=user_body).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 2.Tentar atualizar enviando só espaços
+    body = {"name": "   ", "bio": "   "}
+    response = client.patch("/usuarios/me", json=body, headers=headers)
+    
+    # 3. erro 422
+    assert response.status_code == 422
+    assert "name" in response.text
+    assert "bio" in response.text
+
 def test_listar_usuarios(client):
     """Garante que a listagem padrão retorna todos os usuários com a paginação correta."""
     
