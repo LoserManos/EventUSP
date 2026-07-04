@@ -5,12 +5,28 @@ from typing import Optional, List
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator('name', 'password')
+    @classmethod
+    def validar_strings_vazias(cls, value: str):
+        texto_limpo = value.strip()
+        if not texto_limpo:
+            raise ValueError('O campo não pode estar vazio ou conter apenas espaços em branco.')
+        return texto_limpo
 class SignupRequest(BaseModel):
     name: str
     nickname: str
     email: EmailStr
     password: str
     bio: Optional[str] = None
+
+    @field_validator('name', 'password')
+    @classmethod
+    def validar_strings_vazias(cls, value: str):
+        texto_limpo = value.strip()
+        if not texto_limpo:
+            raise ValueError('O campo não pode estar vazio ou conter apenas espaços em branco.')
+        return texto_limpo
 class SignupResponse(BaseModel):
     id: int
     name: str
@@ -44,6 +60,16 @@ class UserUpdateSchema(BaseModel):
     nickname: Optional[str] = None
     bio: Optional[str] = None
     # Não inclui 'email' ou 'password' aqui por segurança (são tratados na autenticação).
+
+    @field_validator('name', 'bio')
+    @classmethod
+    def validar_strings_vazias(cls, value: Optional[str]):
+        if value is not None:
+            texto_limpo = value.strip()
+            if not texto_limpo:
+                raise ValueError('O campo não pode conter apenas espaços em branco.')
+            return texto_limpo
+        return value
 
 class EventCreateSchema(BaseModel):
     """Molde de entrada: Dados estritamente necessários para criar um evento."""
@@ -118,7 +144,22 @@ class CommentCreateSchema(BaseModel):
     """Molde de entrada: Dados para criar um novo comentário."""
     content: str
 
+    @field_validator('content')
+    @classmethod
+    def validar_conteudo_vazio(cls, value: str):
+        texto_limpo = value.strip()
+        if not texto_limpo:
+            raise ValueError('O comentário não pode estar vazio.')
+        return texto_limpo
+
 class PaginatedEventResponse(BaseModel):
     pagina_atual: int
     total_eventos: Optional[int] = None
     dados: List[EventResponseSchema]
+
+class PaginatedUserResponse(BaseModel):
+    current_page: int
+    limit: int
+    total_records: int 
+    total_pages: int
+    data: List[UserResponseSchema]

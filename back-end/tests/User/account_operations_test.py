@@ -118,7 +118,124 @@ def test_follow_nobody(auth_client,client,db_session):
     assert res.status_code == 200
     assert dtres["mensagem"] == "Você já segue este usuário"
 
+## cenario 13: editar meu perfil enviando apenas espaços em branco, deve retornar 422
+def test_edit_profile_espacos_vazios(client):
+    user_body = {"name": "Editor Vazio", "email": "editor_vazio@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json=user_body).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
 
+    # 2.Tentar atualizar enviando só espaços
+    body = {"name": "   ", "bio": "   "}
+    response = client.patch("/usuarios/me", json=body, headers=headers)
+    
+    # 3. erro 422
+    assert response.status_code == 422
+    assert "name" in response.text
+    assert "bio" in response.text
+
+def test_listar_usuarios(client):
+    """Garante que a listagem padrão retorna todos os usuários com a paginação correta."""
+    
+    # 1. PREPARAÇÃO: Criar 3 usuários no banco (o primeiro já nos dá o token)
+    user_logado = {"name": "Admin", "email": "admin@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_logado)
+    token = client.post("/auth/login", json=user_logado).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    client.post("/auth/signup", json={"name": "Leonardo_Cesar", "email": "leo@teste.com", "password": "123"})
+    client.post("/auth/signup", json={"name": "Otavio", "email": "otavio@teste.com", "password": "123"})
+
+    # 2. AÇÃO: Bater na rota sem passar nenhum filtro (deve assumir page=1, limit=20)
+    response = client.get("/usuarios/", headers=headers)
+    data = response.json()
+
+    # 3. VALIDAÇÃO: Status 200 e estrutura de paginação
+    assert response.status_code == 200
+    assert data["current_page"] == 1
+    assert data["limit"] == 20
+    assert data["total_records"] >= 3  # Pelo menos os 3 que acabamos de criar
+    assert "data" in data
+
+
+def test_listar_usuarios_com_busca(client):
+    """Garante que o filtro 'search' funciona usando ilike (ignorando maiúsculas/minúsculas)."""
+    
+    user_logado = {"name": "Buscador", "email": "busca@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_logado)
+    token = client.post("/auth/login", json=user_logado).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    client.post("/auth/signup", json={"name": "Leonardo_Cesar", "email": "leo_alvo@teste.com", "password": "123"})
+    
+    # Buscar por um pedaço do nome em minúsculo
+    response = client.get("/usuarios/?search=cesar", headers=headers)
+    data = response.json()
+
+    # Deve encontrar o Leonardo_Cesar
+    assert response.status_code == 200
+    # Como o banco de testes é limpo a cada rodada (ou deve ser), garantimos que achou alguém
+    assert len(data["data"]) >= 1 
+    nomes_encontrados = [user["name"] for user in data["data"]]
+    assert any("Leonardo_Cesar" in nome for nome in nomes_encontrados)
+
+
+def test_listar_usuarios_paginacao_personalizada(client):
+    """Garante que os parâmetros limit e page alteram a devolução dos dados."""
+    
+    user_logado = {"name": "Testador", "email": "pag@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_logado)
+    token = client.post("/auth/login", json=user_logado).json()["access_token"]
+    
+    # Pedir a página 1, mas limitando a apenas 1 resultado por página
+    response = client.get("/usuarios/?page=1&limit=1", headers={"Authorization": f"Bearer {token}"})
+    data = response.json()
+
+    assert response.status_code == 200
+    assert data["limit"] == 1
+    assert len(data["data"]) == 1
+    assert data["total_pages"] == data["total_records"] # Se o limite é 1, total_pages = total_records
+
+
+def test_listar_usuarios_erros_de_validacao(client):
+    """Garante que a API não aceita páginas inválidas ou limites abusivos."""
+    
+    user_logado = {"name": "Hacker Limite", "email": "limite@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_logado)
+    token = client.post("/auth/login", json=user_logado).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Página zero ou negativa
+    resp_page = client.get("/usuarios/?page=0", headers=headers)
+    assert resp_page.status_code == 422
+
+    # Tentativa 2: Pedir 500 usuários de uma vez (burlar o le=100)
+    resp_limit = client.get("/usuarios/?limit=500", headers=headers)
+    assert resp_limit.status_code == 422
+
+
+def test_listar_usuarios_sem_autenticacao(client):
+    """Proteção básica da rota."""
+    response = client.get("/usuarios/")
+    assert response.status_code == 401
+
+def test_listar_usuarios_busca_sem_resultados(client):
+    """Garante que buscar por um termo inexistente retorna status 200 com lista vazia."""
+    
+    user_logado = {"name": "Validador", "email": "valida_vazio@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_logado)
+    token = client.post("/auth/login", json=user_logado).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Buscar por uma string que sabemos que não bate com nenhum usuário criado
+    response = client.get("/usuarios/?search=XYZ_NinguemTemEsseNome_ZYX", headers=headers)
+    data = response.json()
+
+    # 3. A API deve processar com sucesso, mas entregar uma página vazia
+    assert response.status_code == 200
+    assert data["total_records"] == 0
+    assert data["total_pages"] == 0
+    assert data["data"] == []  # Garante que o array de usuários veio totalmente vazio
 
 
 

@@ -93,5 +93,22 @@ def test_login(client,db_session:Session):
     res = client.post("/auth/login",json=login)
     assert res.status_code == 400
 
+## cenario 8: criação de user com nome ou senha contendo apenas espaços, deve retornar erro 422
+def test_create_account_espacos_vazios(client):
+    body_nome_vazio = {"name": "   ", "email": "vazio@gmail.com", "password": "123"}
+    res_nome = client.post("/auth/signup", json=body_nome_vazio)
+    assert res_nome.status_code == 422
+    assert "name" in res_nome.text
+
+    body_senha_vazia = {"name": "Valido", "email": "valido@gmail.com", "password": "   "}
+    res_senha = client.post("/auth/signup", json=body_senha_vazia)
+    assert res_senha.status_code == 422
+    assert "password" in res_senha.text
+
+## cenario 9: login com campos contendo apenas espaços, deve retornar erro 422
+def test_login_espacos_vazios(client):
+    login_invalido = {"name": "   ", "email": "nattan@gmail.com", "password": "   "}
+    res = client.post("/auth/login", json=login_invalido)
+    assert res.status_code == 422
 
 
