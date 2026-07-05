@@ -6,7 +6,7 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-    @field_validator('name', 'password')
+    @field_validator('email', 'password')
     @classmethod
     def validar_strings_vazias(cls, value: str):
         texto_limpo = value.strip()
@@ -20,7 +20,7 @@ class SignupRequest(BaseModel):
     password: str
     bio: Optional[str] = None
 
-    @field_validator('name', 'password')
+    @field_validator('name', 'password','nickname')
     @classmethod
     def validar_strings_vazias(cls, value: str):
         texto_limpo = value.strip()
