@@ -175,6 +175,9 @@ def interest_event(evento_id: int, current_user: User = Depends(get_actual_user)
 # Comentar em um Evento
 @router.post("/{evento_id}/comentarios", status_code=status.HTTP_201_CREATED)
 def add_comment(evento_id: int, comment_data: CommentCreateSchema, current_user: User = Depends(get_actual_user), session: Session = Depends(get_session)):
+    event = session.get(Event, evento_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento não encontrado.")
     new_comment = Comment(content=comment_data.content, user_id=current_user.id, event_id=evento_id)
     session.add(new_comment)
     session.commit()
