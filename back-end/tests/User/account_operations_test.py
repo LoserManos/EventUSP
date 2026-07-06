@@ -101,7 +101,7 @@ def test_follow_nobody(auth_client):
     assert dtres["detail"] == "Não é possível seguir um usuário inexistente."
 
 ## cenario 13: editar perfil com espaços
-def test_edit_profile_espacos_vazios(client):
+def test_edit_profile_blank_spaces(client):
     user_body = {"name": "Editor", "nickname": "editor_nick", "email": "editor@teste.com", "password": "123"}
     client.post("/auth/signup", json=user_body)
     token = client.post("/auth/login", json={"email": "editor@teste.com", "password": "123"}).json()["access_token"]
@@ -111,7 +111,7 @@ def test_edit_profile_espacos_vazios(client):
     response = client.patch("/usuarios/me", json=body, headers=headers)
     assert response.status_code == 422
 
-def test_listar_usuarios(client,auth_client):
+def test_list_users(client,auth_client):
     """Garante que a listagem padrão retorna todos os usuários com a paginação correta."""
     
     client.post("/auth/signup", json={"name": "Leonardo_Cesar","nickname":"for", "email": "leo@teste.com", "password": "123"})
@@ -129,29 +129,29 @@ def test_listar_usuarios(client,auth_client):
     assert "data" in data
 
 
-def test_listar_usuarios_com_busca(client):
-    """Garante que o filtro 'search' funciona usando ilike (ignorando maiúsculas/minúsculas)."""
+def test_list_users_with_filter(client):
+    """Garante que o filtro 'search' funciona usando ilike no nickname (ignorando maiúsculas/minúsculas)."""
     
     user_logado = {"name": "Buscador", "nickname":"sas","email": "busca@teste.com", "password": "123"}
     client.post("/auth/signup", json=user_logado)
     token = client.post("/auth/login", json=user_logado).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    client.post("/auth/signup", json={"name": "Leonardo_Cesar","nickname":"jaja", "email": "leo_alvo@teste.com", "password": "123"})
+    client.post("/auth/signup", json={"name": "Leonardo_Cesar","nickname":"leocesar", "email": "leo_alvo@teste.com", "password": "123"})
     
     # Buscar por um pedaço do nome em minúsculo
     response = client.get("/usuarios/?search=cesar", headers=headers)
     data = response.json()
 
-    # Deve encontrar o Leonardo_Cesar
+    # Deve encontrar o usuário pelo nickname
     assert response.status_code == 200
     # Como o banco de testes é limpo a cada rodada (ou deve ser), garantimos que achou alguém
     assert len(data["data"]) >= 1 
-    nomes_encontrados = [user["name"] for user in data["data"]]
-    assert any("Leonardo_Cesar" in nome for nome in nomes_encontrados)
+    nicknames_found = [user["nickname"] for user in data["data"]]
+    assert any("leocesar" in nick for nick in nicknames_found)
 
 
-def test_listar_usuarios_paginacao_personalizada(client):
+def test_list_users_custom_pagination(client):
     """Garante que os parâmetros limit e page alteram a devolução dos dados."""
     
     user_logado = {"name": "Testador","nickname":"sasa", "email": "pag@teste.com", "password": "123"}
@@ -168,7 +168,7 @@ def test_listar_usuarios_paginacao_personalizada(client):
     assert data["total_pages"] == data["total_records"] # Se o limite é 1, total_pages = total_records
 
 
-def test_listar_usuarios_erros_de_validacao(client):
+def test_list_users_validation_error(client):
     """Garante que a API não aceita páginas inválidas ou limites abusivos."""
     
     user_logado = {"name": "Hacker Limite", "nickname":"sasa","email": "limite@teste.com", "password": "123"}
@@ -185,12 +185,12 @@ def test_listar_usuarios_erros_de_validacao(client):
     assert resp_limit.status_code == 422
 
 
-def test_listar_usuarios_sem_autenticacao(client):
+def test_list_users_no_autentfication(client):
     """Proteção básica da rota."""
     response = client.get("/usuarios/")
     assert response.status_code == 401
 
-def test_listar_usuarios_busca_sem_resultados(client):
+def test_list_users_no_result(client):
     """Garante que buscar por um termo inexistente retorna status 200 com lista vazia."""
     
     user_logado = {"name": "Validador", "nickname":"sasa","email": "valida_vazio@teste.com", "password": "123"}

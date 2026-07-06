@@ -19,7 +19,7 @@ def list_users(current_user: User = Depends(get_actual_user),page: int = Query(1
     offset = (page - 1) * limit
     query = select(User)
     if search:
-        query = query.where(User.name.ilike("%"+search+"%"))     
+        query = query.where(User.nickname.ilike("%"+search+"%"))     
     users = session.exec(query.offset(offset).limit(limit)).all()
     total_records = session.exec(select(func.count()).select_from(query.subquery())).one() ## pega a quantidade total de user registrados(talvez isso vai deixar a paginação lenta, mudar????)
     return {
