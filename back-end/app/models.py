@@ -78,6 +78,7 @@ class Organization(SQLModel, table=True):
     description: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     events: List["Event"] = Relationship(back_populates="organization")  # Relacionamento: Uma organização pode ter vários eventos atrelados, facilita a busca, já q n precisamos bugas chave estrangeira em Event
+    picture_profile: Optional[str] = Field(default="static/defaults/org.jpg")
 
 class Category(SQLModel,table=True):
     __tablename__ = "category"
