@@ -164,3 +164,31 @@ class PaginatedUserResponse(BaseModel):
     total_records: int 
     total_pages: int
     data: List[UserResponseSchema]
+
+class OrganizationCreateSchema(BaseModel):
+    """Molde de entrada: Dados estritamente necessários para criar uma organização."""
+    name: str
+    description: str
+
+    @field_validator('name', 'description')
+    @classmethod
+    def validar_strings_vazias(cls, value: str):
+        texto_limpo = value.strip()
+        if not texto_limpo:
+            raise ValueError('Este campo não pode estar vazio ou conter apenas espaços em branco.')
+        return texto_limpo
+    
+class OrganizationUpdateSchema(BaseModel):
+    """Molde de entrada: Dados para atualizar uma organização. Todos os campos são opcionais."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+    @field_validator('name', 'description')
+    @classmethod
+    def validar_strings_vazias(cls, value: Optional[str]):
+        if value is not None:
+            texto_limpo = value.strip()
+            if not texto_limpo:
+                raise ValueError('Este campo não pode estar vazio ou conter apenas espaços em branco.')
+            return texto_limpo
+        return value
