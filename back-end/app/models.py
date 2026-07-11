@@ -74,6 +74,7 @@ class Organization(SQLModel, table=True):
     __tablename__ = "organization"
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    creator_id: int = Field(foreign_key="user.id")
     members: List["User"] = Relationship(link_model=MemberOrganization, back_populates="organizations")
     description: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
