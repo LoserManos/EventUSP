@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -18,24 +19,86 @@ import {
   Montserrat_400Regular,
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
+import { useRouter } from 'expo-router';
 import { colors } from '@/styles/global';
 
-export default function RegisterScreen({ navigation }: any) {
-  const [usuario, setUsuario] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [senhaVisivel, setSenhaVisivel] = useState(false);
-  const [confirmarSenhaVisivel, setConfirmarSenhaVisivel] = useState(false);
+// *****************
+// TEMPORARIO, BASEIA COM O BACKEND RODANDO LOCALMENTE, DEPOIS MUDAR PARA O IP DO SERVER
+import Constants from 'expo-constants';
+const hostUri = Constants?.expoConfig?.hostUri;
+const localIp = hostUri ? hostUri.split(':')[0] : 'localhost';
+export const API_URL = `http://${localIp}:8000`;
+
+
+export default function RegisterScreen() {
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const router = useRouter();
+
+  const handleRegister = async () => {
+    if (!name.trim() || !nickname.trim() || !email.trim() || !password || !confirmPassword) {
+      Alert.alert('Erro', 'Todos os campos são obrigatórios.');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha precisa ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não conferem.');
+      return;
+    }
+
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Erro', 'Digite um email válido.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          nickname,
+          email,
+          password,
+          bio: '',
+        }),
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        Alert.alert('Erro no cadastro', data?.detail || 'Não foi possível concluir o cadastro.');
+        return;
+      }
+
+      Alert.alert('Sucesso', 'Conta criada com sucesso!');
+      router.replace('/login');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
+      console.error(error);
+    }
+  };
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
-
-  const handleCreateAccount = () => {
-    // TODO: implementar lógica de cadastro
-    console.log('Register:', usuario, senha, confirmarSenha);
-  };
 
   if (!fontsLoaded) {
     return (
@@ -63,7 +126,6 @@ export default function RegisterScreen({ navigation }: any) {
             </Text>
           </View>
 
-          {/* Campo Usuário */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="person-outline"
@@ -73,15 +135,49 @@ export default function RegisterScreen({ navigation }: any) {
             />
             <TextInput
               style={styles.input}
+              placeholder="Nome"
+              placeholderTextColor={colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="at-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
               placeholder="Usuário"
               placeholderTextColor={colors.textSecondary}
-              value={usuario}
-              onChangeText={setUsuario}
+              value={nickname}
+              onChangeText={setNickname}
               autoCapitalize="none"
             />
           </View>
 
-          {/* Campo Senha */}
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="mail-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.textSecondary}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
           <View style={styles.inputWrapper}>
             <Ionicons
               name="lock-closed-outline"
@@ -93,23 +189,22 @@ export default function RegisterScreen({ navigation }: any) {
               style={styles.input}
               placeholder="Senha"
               placeholderTextColor={colors.textSecondary}
-              value={senha}
-              onChangeText={setSenha}
-              secureTextEntry={!senhaVisivel}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
             />
             <TouchableOpacity
-              onPress={() => setSenhaVisivel(!senhaVisivel)}
+              onPress={() => setPasswordVisible(!passwordVisible)}
               style={styles.eyeIcon}
             >
               <Ionicons
-                name={senhaVisivel ? 'eye-off-outline' : 'eye-outline'}
+                name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
                 color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
 
-          {/* Campo Confirmar Senha */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="lock-closed-outline"
@@ -121,26 +216,25 @@ export default function RegisterScreen({ navigation }: any) {
               style={styles.input}
               placeholder="Confirmar Senha"
               placeholderTextColor={colors.textSecondary}
-              value={confirmarSenha}
-              onChangeText={setConfirmarSenha}
-              secureTextEntry={!confirmarSenhaVisivel}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!confirmPasswordVisible}
             />
             <TouchableOpacity
-              onPress={() => setConfirmarSenhaVisivel(!confirmarSenhaVisivel)}
+              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
               style={styles.eyeIcon}
             >
               <Ionicons
-                name={confirmarSenhaVisivel ? 'eye-off-outline' : 'eye-outline'}
+                name={confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
                 color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
 
-          {/* Botão Create Account */}
           <TouchableOpacity
             style={styles.createButton}
-            onPress={handleCreateAccount}
+            onPress={handleRegister}
             activeOpacity={0.85}
           >
             <LinearGradient
@@ -149,14 +243,13 @@ export default function RegisterScreen({ navigation }: any) {
               end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
-              <Text style={styles.createButtonText}>Create Account</Text>
+              <Text style={styles.createButtonText}>Criar conta</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Login */}
           <View style={styles.loginWrapper}>
             <Text style={styles.loginTexto}>Eu já tenho uma conta </Text>
-            <TouchableOpacity onPress={() => navigation?.navigate?.('Login')}>
+            <TouchableOpacity onPress={() => router.push('/login')}>
               <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>

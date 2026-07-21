@@ -1,12 +1,13 @@
 import MealItem from '@/components/MealItem';
 import { clearAllMeals, getMeals, Meal } from '@/storage/meals';
 import { globalStyles } from '@/styles/global';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function SocialScreen() {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const router = useRouter();
 
   const loadMeals = async () => {
     const data = await getMeals();
@@ -21,7 +22,8 @@ export default function SocialScreen() {
   useFocusEffect(
     useCallback(() => {
       loadMeals();
-    }, []),
+      router.replace('/(auth)/login');
+    }, [router]),
   );
 
   return (
@@ -32,6 +34,7 @@ export default function SocialScreen() {
           <Text style={styles.clearButton}>Clear All</Text>
         </TouchableOpacity>
       </View>
+      
       <View style={{ marginTop: 30 }}>
         {meals.length === 0 ? (
           <Text style={globalStyles.empty}>No meals logged yet.</Text>

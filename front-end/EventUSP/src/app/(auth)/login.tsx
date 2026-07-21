@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -18,21 +19,68 @@ import {
   Montserrat_400Regular,
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
-import { colors, globalStyles } from '@/styles/global';
+import { useRouter } from 'expo-router';
+import { colors } from '@/styles/global';
 
-export default function LoginScreen({ navigation }) {
-  const [usuario, setUsuario] = useState('');
-  const [senha, setSenha] = useState('');
-  const [senhaVisivel, setSenhaVisivel] = useState(false);
+// *****************
+// TEMPORARIO, BASEIA COM O BACKEND RODANDO LOCALMENTE, DEPOIS MUDAR PARA O IP DO SERVER
+import Constants from 'expo-constants';
+const hostUri = Constants?.expoConfig?.hostUri;
+const localIp = hostUri ? hostUri.split(':')[0] : 'localhost';
+export const API_URL = `http://${localIp}:8000`;
+
+export default function LoginScreen() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
 
-  const handleLogin = () => {
-    // TODO: implementar lógica de autenticação
-    console.log('Login:', usuario, senha);
+  const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      Alert.alert('Erro', 'Informe o email e a senha.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+
+      if (!response.ok) {
+        let mensagemErro = 'Falha no login.';
+        
+        if (data.detail) {
+           mensagemErro = typeof data.detail === 'string' 
+             ? data.detail 
+             : JSON.stringify(data.detail, null, 2); 
+        }
+        Alert.alert('Erro', mensagemErro);
+        return;
+      }
+
+      Alert.alert('Sucesso', 'Login realizado com sucesso!');
+      router.replace('/(tabs)');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
+      console.error(error);
+    }
   };
 
   if (!fontsLoaded) {
@@ -61,26 +109,24 @@ export default function LoginScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* Campo Usuário/Email */}
           <View style={styles.inputWrapper}>
             <Ionicons
-              name="person-outline"
+              name="mail-outline"
               size={20}
               color={colors.textSecondary}
               style={styles.inputIcon}
             />
             <TextInput
               style={styles.input}
-              placeholder="Usuário ou Email"
+              placeholder="Email"
               placeholderTextColor={colors.textSecondary}
-              value={usuario}
-              onChangeText={setUsuario}
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
             />
           </View>
 
-          {/* Campo Senha */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="lock-closed-outline"
@@ -92,16 +138,16 @@ export default function LoginScreen({ navigation }) {
               style={styles.input}
               placeholder="Senha"
               placeholderTextColor={colors.textSecondary}
-              value={senha}
-              onChangeText={setSenha}
-              secureTextEntry={!senhaVisivel}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
             />
             <TouchableOpacity
-              onPress={() => setSenhaVisivel(!senhaVisivel)}
+              onPress={() => setPasswordVisible(!passwordVisible)}
               style={styles.eyeIcon}
             >
               <Ionicons
-                name={senhaVisivel ? 'eye-off-outline' : 'eye-outline'}
+                name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
                 color={colors.textSecondary}
               />
@@ -111,7 +157,7 @@ export default function LoginScreen({ navigation }) {
           {/* Esqueceu a senha */}
           <TouchableOpacity
             style={styles.esqueceuSenhaWrapper}
-            onPress={() => navigation?.navigate?.('ForgotPassword')}
+            onPress={() => router.push('/forgot')}
           >
             <Text style={styles.esqueceuSenha}>Esqueceu a senha?</Text>
           </TouchableOpacity>
@@ -136,7 +182,7 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.registrarWrapper}>
             <Text style={styles.registrarTexto}>Crie uma conta </Text>
             <TouchableOpacity
-              onPress={() => navigation?.navigate?.('Register')}
+              onPress={() => router.push('/register')}
             >
               <Text style={styles.registrarLink}>Registrar</Text>
             </TouchableOpacity>

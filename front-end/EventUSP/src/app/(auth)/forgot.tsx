@@ -19,10 +19,11 @@ import {
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
 import { colors } from '@/styles/global';
+import { router, useRouter } from 'expo-router';
 
 export default function ForgotPasswordScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
-
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
@@ -54,7 +55,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
           {/* Botão voltar */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation?.goBack?.()}
+            onPress={() => router.push('/login')}
           >
             <Ionicons name="arrow-back" size={20} color={colors.textPrimaryDark} />
           </TouchableOpacity>
