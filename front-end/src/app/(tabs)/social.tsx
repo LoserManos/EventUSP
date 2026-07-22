@@ -22,7 +22,7 @@ export default function SocialScreen() {
   useFocusEffect(
     useCallback(() => {
       loadMeals();
-      router.replace('/(auth)/login');
+      router.replace('/(auth)/loginScreen');
     }, [router]),
   );
 

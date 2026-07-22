@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -22,78 +21,31 @@ import {
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/global';
 
-// *****************
-// TEMPORARIO, BASEIA COM O BACKEND RODANDO LOCALMENTE, DEPOIS MUDAR PARA O IP DO SERVER
-import Constants from 'expo-constants';
-const hostUri = Constants?.expoConfig?.hostUri;
-const localIp = hostUri ? hostUri.split(':')[0] : 'localhost';
-export const API_URL = `http://${localIp}:8000`;
-
+// Importa o Hook de lógica
+import { useRegister } from '../../hooks/useRegister';
 
 export default function RegisterScreen() {
-  const [name, setName] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const router = useRouter();
 
-  const handleRegister = async () => {
-    if (!name.trim() || !nickname.trim() || !email.trim() || !password || !confirmPassword) {
-      Alert.alert('Erro', 'Todos os campos são obrigatórios.');
-      return;
-    }
-
-    if (password.length < 6) {
-      Alert.alert('Erro', 'A senha precisa ter pelo menos 6 caracteres.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Erro', 'As senhas não conferem.');
-      return;
-    }
-
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Erro', 'Digite um email válido.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          nickname,
-          email,
-          password,
-          bio: '',
-        }),
-      });
-
-      let data = null;
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-
-      if (!response.ok) {
-        Alert.alert('Erro no cadastro', data?.detail || 'Não foi possível concluir o cadastro.');
-        return;
-      }
-
-      Alert.alert('Sucesso', 'Conta criada com sucesso!');
-      router.replace('/login');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
-      console.error(error);
-    }
-  };
+  // Toda a lógica e estados vêm prontos daqui:
+  const {
+    name,
+    setName,
+    nickname,
+    setNickname,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    passwordVisible,
+    togglePasswordVisibility,
+    confirmPasswordVisible,
+    toggleConfirmPasswordVisibility,
+    loading,
+    handleRegister,
+  } = useRegister();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -194,7 +146,7 @@ export default function RegisterScreen() {
               secureTextEntry={!passwordVisible}
             />
             <TouchableOpacity
-              onPress={() => setPasswordVisible(!passwordVisible)}
+              onPress={togglePasswordVisibility}
               style={styles.eyeIcon}
             >
               <Ionicons
@@ -221,7 +173,7 @@ export default function RegisterScreen() {
               secureTextEntry={!confirmPasswordVisible}
             />
             <TouchableOpacity
-              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              onPress={toggleConfirmPasswordVisibility}
               style={styles.eyeIcon}
             >
               <Ionicons
@@ -236,6 +188,7 @@ export default function RegisterScreen() {
             style={styles.createButton}
             onPress={handleRegister}
             activeOpacity={0.85}
+            disabled={loading}
           >
             <LinearGradient
               colors={[colors.orangePrimary, colors.orangePrimary]}
@@ -243,13 +196,17 @@ export default function RegisterScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
-              <Text style={styles.createButtonText}>Criar conta</Text>
+              {loading ? (
+                <ActivityIndicator color={colors.backgroundDark} />
+              ) : (
+                <Text style={styles.createButtonText}>Criar conta</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
           <View style={styles.loginWrapper}>
             <Text style={styles.loginTexto}>Eu já tenho uma conta </Text>
-            <TouchableOpacity onPress={() => router.push('/login')}>
+            <TouchableOpacity onPress={() => router.push('/loginScreen')}>
               <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>

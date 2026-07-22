@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -22,66 +21,28 @@ import {
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/global';
 
-// *****************
-// TEMPORARIO, BASEIA COM O BACKEND RODANDO LOCALMENTE, DEPOIS MUDAR PARA O IP DO SERVER
-import Constants from 'expo-constants';
-const hostUri = Constants?.expoConfig?.hostUri;
-const localIp = hostUri ? hostUri.split(':')[0] : 'localhost';
-export const API_URL = `http://${localIp}:8000`;
+// Importa o Hook de lógica
+import { useLogin } from '../../hooks/useLogin'; 
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  // Toda a lógica e estados vêm prontos daqui:
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    passwordVisible,
+    togglePasswordVisibility,
+    loading,
+    handleLogin,
+  } = useLogin();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
-
-  const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      Alert.alert('Erro', 'Informe o email e a senha.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-
-      let data = null;
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-
-      if (!response.ok) {
-        let mensagemErro = 'Falha no login.';
-        
-        if (data.detail) {
-           mensagemErro = typeof data.detail === 'string' 
-             ? data.detail 
-             : JSON.stringify(data.detail, null, 2); 
-        }
-        Alert.alert('Erro', mensagemErro);
-        return;
-      }
-
-      Alert.alert('Sucesso', 'Login realizado com sucesso!');
-      router.replace('/(tabs)');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
-      console.error(error);
-    }
-  };
 
   if (!fontsLoaded) {
     return (
@@ -109,6 +70,7 @@ export default function LoginScreen() {
             </Text>
           </View>
 
+          {/* Email */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="mail-outline"
@@ -127,6 +89,7 @@ export default function LoginScreen() {
             />
           </View>
 
+          {/* Senha */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="lock-closed-outline"
@@ -143,7 +106,7 @@ export default function LoginScreen() {
               secureTextEntry={!passwordVisible}
             />
             <TouchableOpacity
-              onPress={() => setPasswordVisible(!passwordVisible)}
+              onPress={togglePasswordVisibility}
               style={styles.eyeIcon}
             >
               <Ionicons
@@ -157,7 +120,7 @@ export default function LoginScreen() {
           {/* Esqueceu a senha */}
           <TouchableOpacity
             style={styles.esqueceuSenhaWrapper}
-            onPress={() => router.push('/forgot')}
+            onPress={() => router.push('/forgotScreen')}
           >
             <Text style={styles.esqueceuSenha}>Esqueceu a senha?</Text>
           </TouchableOpacity>
@@ -167,6 +130,7 @@ export default function LoginScreen() {
             style={styles.loginButton}
             onPress={handleLogin}
             activeOpacity={0.85}
+            disabled={loading}
           >
             <LinearGradient
               colors={[colors.orangePrimary, colors.orangePrimary]}
@@ -174,16 +138,18 @@ export default function LoginScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
-              <Text style={styles.loginButtonText}>Login</Text>
+              {loading ? (
+                <ActivityIndicator color={colors.backgroundDark} />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
           {/* Registrar */}
           <View style={styles.registrarWrapper}>
             <Text style={styles.registrarTexto}>Crie uma conta </Text>
-            <TouchableOpacity
-              onPress={() => router.push('/register')}
-            >
+            <TouchableOpacity onPress={() => router.push('/registerScreen')}>
               <Text style={styles.registrarLink}>Registrar</Text>
             </TouchableOpacity>
           </View>
