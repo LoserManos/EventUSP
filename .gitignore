@@ -7,6 +7,7 @@ venv/
 ENV/
 env/
 .env
+gerar_graficos.py
 
 # --- Banco de Dados ---
 # Como estamos usando SQLite, ignore o arquivo do banco para não subir dados de teste
