@@ -99,8 +99,9 @@ def get_actual_user(token: str = Depends(oauth2_scheme), session: Session = Depe
         user_id: int = payload.get("sub")
         if user_id is None:   # Se o token for válido mas não tiver o ID lá dentro, barra o acesso
             raise exception_auth
-    except jwt.PyJWTError:
-        print("parou aqiii")
+    except jwt.PyJWTError as e:
+        print("Erro JWT:", e)
+        print("Token recebido:", token)
         raise exception_auth
     user = session.get(User, user_id) # Busca o usuário dono do token no banco de dados usando o ID extraído
     if user is None: # Se o ID no token for válido, mas o usuário foi deletado do banco, barra o acesso

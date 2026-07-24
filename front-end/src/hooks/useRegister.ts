@@ -57,7 +57,7 @@ export function useRegister() {
       });
 
       Alert.alert('Sucesso', 'Conta criada com sucesso!');
-      router.replace('/loginScreen');
+      router.replace('/login');
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const detail = error.response?.data?.detail;

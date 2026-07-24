@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios'; 
 
 export function useLogin() {
   const router = useRouter();
+  const { signIn } = useAuth(); // Chama a função global do contexto
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -15,37 +17,37 @@ export function useLogin() {
     setPasswordVisible((prev) => !prev);
   };
 
-const handleLogin = async () => {
+  const handleLogin = async () => {
     try {
+      setLoading(true);
+      // Pega o token do backend
       const data = await authService.login({ email, password });
-      // Se deu sucesso (200), faz o login...
+      
+      console.log('Token recebido do backend:', data.access_token);
+      
+      // Passa apenas o token. O signIn vai salvar no celular e buscar os dados de /usuarios/me
+      await signIn(data.access_token);
+
       Alert.alert('Sucesso', 'Login realizado com sucesso!');
       router.replace('/(tabs)');
       
     } catch(error) {
-      // 🚨 O Axios jogou o erro pra cá automaticamente! 🚨
-      
-      // Verifica se o erro veio do servidor (axios)
       if (axios.isAxiosError(error)) {
-        // error.response.data contém aquele mesmo JSON que o FastAPI devolve
         const detail = error.response?.data?.detail;
-        
         let mensagemErro = 'Falha na requisição.';
-        
         if (detail) {
-           // Transforma o Array (no caso do erro 422) em texto, ou usa a String direto (no erro 400)
            mensagemErro = typeof detail === 'string' 
              ? detail 
              : JSON.stringify(detail, null, 2);
         }
-        
         Alert.alert('Erro de Validação', mensagemErro);
       } else {
-        // Se for erro de internet caída, etc.
         Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
       }
+    } finally {
+      setLoading(false);
     }
-}
+  }
 
   return {
     email,

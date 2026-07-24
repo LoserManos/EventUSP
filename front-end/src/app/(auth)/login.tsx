@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,21 +19,27 @@ import {
   Montserrat_400Regular,
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
+import { useRouter } from 'expo-router';
 import { colors } from '@/styles/global';
-import { router, useRouter } from 'expo-router';
 
-export default function ForgotPasswordScreen({ navigation }: any) {
-  const [email, setEmail] = useState('');
+import { useLogin } from '../../hooks/useLogin';
+
+export default function LoginScreen() {
   const router = useRouter();
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    passwordVisible,
+    togglePasswordVisibility,
+    loading,
+    handleLogin,
+  } = useLogin();
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
-
-  const handleEnviar = () => {
-    // TODO: implementar lógica de envio do email de redefinição
-    console.log('Enviar redefinição para:', email);
-  };
 
   if (!fontsLoaded) {
     return (
@@ -52,25 +59,15 @@ export default function ForgotPasswordScreen({ navigation }: any) {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Botão voltar */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.push('/loginScreen')}
-          >
-            <Ionicons name="arrow-back" size={20} color={colors.textPrimaryDark} />
-          </TouchableOpacity>
-
           {/* Título */}
           <View style={styles.header}>
-            <Text style={styles.titulo}>Esqueceu a{'\n'}senha?</Text>
+            <Text style={styles.titulo}>Bem-vindo{'\n'}de volta!</Text>
             <Text style={styles.subtitulo}>
-              <Text style={styles.asterisco}>* </Text>
-              Mandaremos um email de redefinição de senha para o endereço
-              colocado.
+              Faça login para continuar de onde parou.
             </Text>
           </View>
 
-          {/* Campo Email */}
+          {/* Email */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="mail-outline"
@@ -80,7 +77,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             />
             <TextInput
               style={styles.input}
-              placeholder="Coloque seu endereço de email"
+              placeholder="Email"
               placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={setEmail}
@@ -89,11 +86,48 @@ export default function ForgotPasswordScreen({ navigation }: any) {
             />
           </View>
 
-          {/* Botão Enviar */}
+          {/* Senha */}
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Senha"
+              placeholderTextColor={colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+            />
+            <TouchableOpacity
+              onPress={togglePasswordVisibility}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Esqueceu a senha */}
           <TouchableOpacity
-            style={styles.enviarButton}
-            onPress={handleEnviar}
+            style={styles.esqueceuSenhaWrapper}
+            onPress={() => router.push('/forgot')}
+          >
+            <Text style={styles.esqueceuSenha}>Esqueceu a senha?</Text>
+          </TouchableOpacity>
+
+          {/* Botão Login */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
             activeOpacity={0.85}
+            disabled={loading}
           >
             <LinearGradient
               colors={[colors.orangePrimary, colors.orangePrimary]}
@@ -101,9 +135,21 @@ export default function ForgotPasswordScreen({ navigation }: any) {
               end={{ x: 1, y: 0 }}
               style={styles.gradient}
             >
-              <Text style={styles.enviarButtonText}>Enviar</Text>
+              {loading ? (
+                <ActivityIndicator color={colors.backgroundDark} />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Registrar */}
+          <View style={styles.registrarWrapper}>
+            <Text style={styles.registrarTexto}>Crie uma conta </Text>
+            <TouchableOpacity onPress={() => router.push('/register')}>
+              <Text style={styles.registrarLink}>Registrar</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -122,16 +168,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.backgroundDarkSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 32,
+    paddingTop: 40,
   },
   header: {
     marginBottom: 32,
@@ -147,10 +184,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'Montserrat_400Regular',
     color: colors.textSecondary,
-    lineHeight: 21,
-  },
-  asterisco: {
-    color: colors.orangePrimary,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -159,10 +192,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     height: 56,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   inputIcon: {
     marginRight: 10,
+  },
+  eyeIcon: {
+    padding: 4,
   },
   input: {
     flex: 1,
@@ -170,9 +206,19 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_400Regular',
     color: colors.textPrimaryDark,
   },
-  enviarButton: {
+  esqueceuSenhaWrapper: {
+    alignSelf: 'flex-end',
+    marginBottom: 24,
+  },
+  esqueceuSenha: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_400Regular',
+    color: colors.orangePrimary,
+  },
+  loginButton: {
     borderRadius: 16,
     overflow: 'hidden',
+    marginBottom: 20,
     shadowColor: colors.orangePrimary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
@@ -184,9 +230,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  enviarButtonText: {
+  loginButtonText: {
     color: colors.backgroundDark,
     fontSize: 17,
     fontFamily: 'Montserrat_700Bold',
+  },
+  registrarWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  registrarTexto: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_400Regular',
+    color: colors.textPrimaryDark,
+  },
+  registrarLink: {
+    fontSize: 14,
+    fontFamily: 'Montserrat_700Bold',
+    color: colors.orangePrimary,
+    textDecorationLine: 'underline',
   },
 });

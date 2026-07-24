@@ -22,22 +22,30 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/styles/global';
 
 // Importa o Hook de lógica
-import { useLogin } from '../../hooks/useLogin'; 
+import { useRegister } from '../../hooks/useRegister';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
 
   // Toda a lógica e estados vêm prontos daqui:
   const {
+    name,
+    setName,
+    nickname,
+    setNickname,
     email,
     setEmail,
     password,
     setPassword,
+    confirmPassword,
+    setConfirmPassword,
     passwordVisible,
     togglePasswordVisibility,
+    confirmPasswordVisible,
+    toggleConfirmPasswordVisibility,
     loading,
-    handleLogin,
-  } = useLogin();
+    handleRegister,
+  } = useRegister();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -64,13 +72,46 @@ export default function LoginScreen() {
         >
           {/* Título */}
           <View style={styles.header}>
-            <Text style={styles.titulo}>Bem-vindo{'\n'}de volta!</Text>
+            <Text style={styles.titulo}>Criar uma{'\n'}conta</Text>
             <Text style={styles.subtitulo}>
-              Faça login para continuar de onde parou.
+              Leva menos de um minuto para começar.
             </Text>
           </View>
 
-          {/* Email */}
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="person-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Nome"
+              placeholderTextColor={colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="at-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Usuário"
+              placeholderTextColor={colors.textSecondary}
+              value={nickname}
+              onChangeText={setNickname}
+              autoCapitalize="none"
+            />
+          </View>
+
           <View style={styles.inputWrapper}>
             <Ionicons
               name="mail-outline"
@@ -89,7 +130,6 @@ export default function LoginScreen() {
             />
           </View>
 
-          {/* Senha */}
           <View style={styles.inputWrapper}>
             <Ionicons
               name="lock-closed-outline"
@@ -117,18 +157,36 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Esqueceu a senha */}
-          <TouchableOpacity
-            style={styles.esqueceuSenhaWrapper}
-            onPress={() => router.push('/forgotScreen')}
-          >
-            <Text style={styles.esqueceuSenha}>Esqueceu a senha?</Text>
-          </TouchableOpacity>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={20}
+              color={colors.textSecondary}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirmar Senha"
+              placeholderTextColor={colors.textSecondary}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!confirmPasswordVisible}
+            />
+            <TouchableOpacity
+              onPress={toggleConfirmPasswordVisibility}
+              style={styles.eyeIcon}
+            >
+              <Ionicons
+                name={confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
 
-          {/* Botão Login */}
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
+            style={styles.createButton}
+            onPress={handleRegister}
             activeOpacity={0.85}
             disabled={loading}
           >
@@ -141,16 +199,15 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color={colors.backgroundDark} />
               ) : (
-                <Text style={styles.loginButtonText}>Login</Text>
+                <Text style={styles.createButtonText}>Criar conta</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Registrar */}
-          <View style={styles.registrarWrapper}>
-            <Text style={styles.registrarTexto}>Crie uma conta </Text>
-            <TouchableOpacity onPress={() => router.push('/registerScreen')}>
-              <Text style={styles.registrarLink}>Registrar</Text>
+          <View style={styles.loginWrapper}>
+            <Text style={styles.loginTexto}>Eu já tenho uma conta </Text>
+            <TouchableOpacity onPress={() => router.push('/login')}>
+              <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -209,18 +266,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Montserrat_400Regular',
     color: colors.textPrimaryDark,
   },
-  esqueceuSenhaWrapper: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  esqueceuSenha: {
-    fontSize: 14,
-    fontFamily: 'Montserrat_400Regular',
-    color: colors.orangePrimary,
-  },
-  loginButton: {
+  createButton: {
     borderRadius: 16,
     overflow: 'hidden',
+    marginTop: 8,
     marginBottom: 20,
     shadowColor: colors.orangePrimary,
     shadowOffset: { width: 0, height: 8 },
@@ -233,22 +282,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loginButtonText: {
+  createButtonText: {
     color: colors.backgroundDark,
     fontSize: 17,
     fontFamily: 'Montserrat_700Bold',
   },
-  registrarWrapper: {
+  loginWrapper: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 4,
   },
-  registrarTexto: {
+  loginTexto: {
     fontSize: 14,
     fontFamily: 'Montserrat_400Regular',
     color: colors.textPrimaryDark,
   },
-  registrarLink: {
+  loginLink: {
     fontSize: 14,
     fontFamily: 'Montserrat_700Bold',
     color: colors.orangePrimary,
