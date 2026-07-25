@@ -61,6 +61,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name='settings'
+        options={{
+          title: 'Opcoes',
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome6 name='gear' size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
