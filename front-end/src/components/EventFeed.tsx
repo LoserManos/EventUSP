@@ -1,60 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import React from 'react';
+import { View, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { EventCard } from '@/components/EventCard'; 
-import { colors, globalStyles} from '@/styles/global'
-import { getEvents, EventFilters } from '@/storage/eventAPI'
+import { colors } from '@/styles/global'
+import { EventFilters } from '@/services/eventService'
+import { useEventsFeed } from '@/hooks/useEventsFeed'
 
 interface EventFeedProps {
   filtrosAtivos: EventFilters;
 }
 
 export default function EventFeed({ filtrosAtivos }: EventFeedProps) {
-  // Estados para controlar os dados e a paginação
-  const [data, setData] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-
-  // O mesmo limite padrão de 20 eventos do backend
-  const limite = 20; 
-
-  // Função que busca a próxima página de eventos
-  const loadMoreEvents = async (resetPage = false) => {
-    // Se resetPage for true, voltamos para a página 1 (útil para quando o filtro muda)
-    const currentPage = resetPage ? 1 : page;
-    
-    // Evita requisições simultâneas se já estiver carregando ou se não houver mais dados
-    if (loading || (!hasMore && !resetPage)) return;
-    setLoading(true);
-
-    try {
-      // Chama a "API", passando a página atual e o limite
-      const response = await getEvents(currentPage, limite, filtrosAtivos);
-
-      setData((prevData) => {
-        // Se for reset, substitui. Se for scroll, concatena.
-        const newData = resetPage ? response.dados : [...prevData, ...response.dados];
-
-        // Filtra duplicatas por ID (caso a API retorne algo que já temos)
-        return newData.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
-      });
-
-      setHasMore(response.dados.length === limite);
-      if (!resetPage) setPage((p) => p + 1);
-      
-    } catch (error) {
-      console.error("Erro ao carregar eventos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Carrega a primeira página assim que a tela abre
-  useEffect(() => {
-    setPage(1);
-    setHasMore(true);
-    loadMoreEvents(true);
-  }, [filtrosAtivos]);
+  const { data, loading, loadMoreEvents } = useEventsFeed(filtrosAtivos, 20);
 
   // Componente de Loading que aparece no final da lista
   const renderFooter = () => {
@@ -80,6 +36,7 @@ export default function EventFeed({ filtrosAtivos }: EventFeedProps) {
 
           return (
             <EventCard
+              id={item.id}
               title={item.title}
               organizer={"Comunidade USP"} // Placeholder temporário
               location={item.local}

@@ -2,11 +2,14 @@ import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
+import { useRouter } from "expo-router";
+
 const ACCENT = "#87d4e4";
 const ACCENT_DARK = "#5bbdd0";
 const eventImage = require("../../assets/images/Card.png");
 
 interface EventCardProps {
+  id?: number | string;
   title?: string;
   organizer?: string;
   location?: string;
@@ -17,6 +20,7 @@ interface EventCardProps {
 }
 
 export function EventCard({
+  id,
   title = "matraca x",
   organizer = "ECA Jr.",
   location = "Vala da FAUD-USP",
@@ -26,9 +30,16 @@ export function EventCard({
   image = eventImage,
 }: EventCardProps) {
   const [saved, setSaved] = useState(false);
+  const router = useRouter();
+
+  const handlePress = () => {
+    if (id) {
+      router.push(`/event/${id}`);
+    }
+  };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handlePress}>
       <View style={styles.content}>
         <Image source={image} style={styles.image} resizeMode="cover" />
 
@@ -59,7 +70,7 @@ export function EventCard({
           <MetaRow icon="clock-outline" label={time} />
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

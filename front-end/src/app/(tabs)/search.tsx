@@ -6,7 +6,7 @@ import SearchBar from '@/components/SearchBar';
 import FilterButton from '@/components/FilterButton';
 import FilterPanel from '@/components/FilterPanel';
 import EventFeed from '@/components/EventFeed';
-import { EventFilters } from '@/storage/eventAPI';
+import { EventFilters } from '@/services/eventService';
 
 export default function SearchPage() {
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
