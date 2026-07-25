@@ -71,18 +71,24 @@ export default function EventFeed({ filtrosAtivos }: EventFeedProps) {
       <FlatList
         showsVerticalScrollIndicator={false}
         data={data}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         // O renderItem desenha o seu EventCard para cada item da lista
-        renderItem={({ item }) => (
-          <EventCard
-            title={item.title}
-            organizer={item.organizer}
-            location={item.location}
-            dates={item.dates}
-            time={item.time}
-            free={item.free}
-          />
-        )}
+        renderItem={({ item }) => {
+          const dateObj = new Date(item.start_date);
+          const formattedDate = dateObj.toLocaleDateString('pt-BR');
+          const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+          return (
+            <EventCard
+              title={item.title}
+              organizer={"Comunidade USP"} // Placeholder temporário
+              location={item.local}
+              dates={formattedDate}
+              time={formattedTime}
+              free={true} // Placeholder temporário
+            />
+          );
+        }}
         // O Scroll Infinito acontece aqui:
         onEndReached={() => loadMoreEvents(false)}
         // Define o quão perto do final da lista o usuário precisa chegar para disparar o onEndReached. 
