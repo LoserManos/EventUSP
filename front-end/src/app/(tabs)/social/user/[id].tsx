@@ -8,10 +8,10 @@ import { User } from '@/types/user';
 import { userService } from '@/services/userService';
 import { UserOverlayModal } from '@/components/UserOverlayModal';
 import { OrgCard } from '@/components/OrgCard';
-import { UserCard } from '@/components/UserCard';
+import { UserListModal } from '@/components/UserListModal'; // Novo componente isolado
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { getImageUrl } from '@/utils/image'; // Utilitário de formatação de imagem
+import { getImageUrl } from '@/utils/image';
 
 const userPlaceholder = require('@/assets/images/LA.png');
 
@@ -28,13 +28,12 @@ export default function UserProfilePage() {
   const isMe = user?.id && currentLoggedUserId ? user.id === currentLoggedUserId : false;
 
   const [isFollowing, setIsFollowing] = useState(false);
-
-  // Estados dos Modais (Overlays)
   const [modalType, setModalType] = useState<'orgs' | 'followers' | 'following' | 'edit' | null>(null);
   
   const [userOrgs, setUserOrgs] = useState<any[]>([]);
   const [followersList, setFollowersList] = useState<User[]>([]);
   const [followingList, setFollowingList] = useState<User[]>([]);
+  const [followingIds, setFollowingIds] = useState<number[]>([]);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
@@ -54,7 +53,6 @@ export default function UserProfilePage() {
         setEditNickname(data.nickname);
         setEditBio(data.bio || '');
 
-        // Carrega seguidores, seguindo e organizações para preencher os contadores e listas
         const followers = await userService.getFollowers(userId);
         const following = await userService.getFollowing(userId);
         
@@ -63,8 +61,8 @@ export default function UserProfilePage() {
         
         setFollowingList(following);
         setFollowingCount(following.length);
+        setFollowingIds(following.map(f => f.id));
 
-        // Verifica se o usuário logado segue este perfil
         if (currentLoggedUserId && !isMe) {
           const isUserFollowing = followers.some(f => f.id === currentLoggedUserId);
           setIsFollowing(isUserFollowing);
@@ -118,7 +116,6 @@ export default function UserProfilePage() {
       let newPictureProfile = user?.picture_profile;
 
       if (selectedImageUri) {
-        // Envia a foto usando a rota uploadMyPhoto disponível no userService[cite: 3]
         const photoResponse = await userService.uploadMyPhoto({
           uri: selectedImageUri,
           name: selectedImageUri.split('/').pop() || 'profile.jpg',
@@ -162,7 +159,6 @@ export default function UserProfilePage() {
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         
         <View style={styles.profileHeader}>
-          {/* Avatar principal formatado com getImageUrl */}
           <Image 
             source={user.picture_profile ? { uri: getImageUrl(user.picture_profile)! } : userPlaceholder} 
             style={styles.avatar} 
@@ -221,26 +217,44 @@ export default function UserProfilePage() {
 
       </ScrollView>
 
-      {/* Modais de Overlay */}
+      {/* Modal de Organizações */}
       <UserOverlayModal visible={modalType === 'orgs'} onClose={() => setModalType(null)} title="Organizações">
         <ScrollView>
           {userOrgs.length === 0 ? <Text style={styles.emptyModalText}>Nenhuma organização vinculada.</Text> : userOrgs.map((org) => <OrgCard key={org.id} org={org} />)}
         </ScrollView>
       </UserOverlayModal>
 
-      <UserOverlayModal visible={modalType === 'followers'} onClose={() => setModalType(null)} title="Seguidores">
-        <ScrollView>
-          {followersList.length === 0 ? <Text style={styles.emptyModalText}>Nenhum seguidor encontrado.</Text> : followersList.map((u) => <UserCard key={u.id} user={u} isCurrentUser={u.id === currentLoggedUserId} onPress={() => { setModalType(null); router.push(`/social/user/${u.id}`); }} />)}
-        </ScrollView>
-      </UserOverlayModal>
+      {/* Modal de Seguidores (Usando componente separado) */}
+      <UserListModal
+        visible={modalType === 'followers'}
+        onClose={() => setModalType(null)}
+        title="Seguidores"
+        users={followersList}
+        currentLoggedUserId={currentLoggedUserId}
+        followingIds={followingIds}
+        onSelectUser={(userId) => {
+          setModalType(null);
+          router.push(`/social/user/${userId}`);
+        }}
+        emptyMessage="Nenhum seguidor encontrado."
+      />
 
-      <UserOverlayModal visible={modalType === 'following'} onClose={() => setModalType(null)} title="Seguindo">
-        <ScrollView>
-          {followingList.length === 0 ? <Text style={styles.emptyModalText}>Não está seguindo ninguém.</Text> : followingList.map((u) => <UserCard key={u.id} user={u} isCurrentUser={u.id === currentLoggedUserId} onPress={() => { setModalType(null); router.push(`/social/user/${u.id}`); }} />)}
-        </ScrollView>
-      </UserOverlayModal>
+      {/* Modal de Seguindo (Usando componente separado) */}
+      <UserListModal
+        visible={modalType === 'following'}
+        onClose={() => setModalType(null)}
+        title="Seguindo"
+        users={followingList}
+        currentLoggedUserId={currentLoggedUserId}
+        followingIds={followingIds}
+        onSelectUser={(userId) => {
+          setModalType(null);
+          router.push(`/social/user/${userId}`);
+        }}
+        emptyMessage="Não está seguindo ninguém."
+      />
 
-      {/* Overlay de Edição de Perfil */}
+      {/* Modal de Edição de Perfil */}
       <UserOverlayModal visible={modalType === 'edit'} onClose={() => setModalType(null)} title="Editar Perfil">
         <ScrollView contentContainerStyle={styles.editForm}>
           
