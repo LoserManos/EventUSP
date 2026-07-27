@@ -3,9 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { EventFilters } from '@/services/eventService';
 
-// Espelho do enum CategoryType do models.py
 const CATEGORY_TYPES = [
-  "party", "sport", "workshop", "lecture", 
+  "todos", "party", "sport", "workshop", "lecture", 
   "congress", "social", "religion", "academic"
 ];
 
@@ -16,7 +15,7 @@ interface FilterPanelProps {
 
 export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPanelProps) {
   // Estados para capturar os inputs do usuário
-  const [selectedCategory, setSelectedCategory] = useState(currentFilters.categoria);
+  const [selectedCategory, setSelectedCategory] = useState(currentFilters.categoria || "todos");
 
   // Estado para Ordenação
   const [sortBy, setSortBy] = useState<'date_asc' | 'date_desc' | 'likes'>('date_asc');
@@ -33,7 +32,7 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
             <Pressable
               key={cat}
               style={[styles.pill, selectedCategory === cat && styles.pillActive]}
-              onPress={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              onPress={() => setSelectedCategory(cat)}
             >
               <Text style={[styles.pillText, selectedCategory === cat && styles.pillTextActive]}>
                 {cat.toUpperCase()}
@@ -72,7 +71,7 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
         style={styles.applyButton}
         onPress={() => {
           onApplyFilters({
-            categoria: selectedCategory,
+            categoria: selectedCategory === "todos" ? null : selectedCategory,
             sortBy
           });
         }}
