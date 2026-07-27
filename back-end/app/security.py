@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 import bcrypt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status,Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
 from app.database import get_session
@@ -11,6 +11,7 @@ from app.models import User
 from datetime import datetime, timedelta, timezone
 # Configurações do Token --- ISSO DA QUI TUDO VAI PARA O .ENV MAIS PRA FRENTE, A secret key vai ser alterada também
 SECRET_KEY = os.getenv("SECRET_KEY", "CHAVE SUPER SECRETAAAAA")
+API_KEY = os.getenv("API_KEY","CHAVE SUPER SECRETAAAAAA2")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS= 30  # O token expira em 30 dias, mais pra frente usar técninca de refresh token
 # Configurações do Token --- ISSO DA QUI TUDO VAI PARA O .ENV MAIS PRA FRENTE
@@ -106,3 +107,25 @@ def get_actual_user(token: str = Depends(oauth2_scheme), session: Session = Depe
     if user is None: # Se o ID no token for válido, mas o usuário foi deletado do banco, barra o acesso
         raise exception_auth        
     return user     # Retorna o objeto do usuário pronto para ser consumido pela rota do FastAPI
+
+
+
+# =====================================================================
+# DEPENDÊNCIA DE CONEXÃO COM A API
+# =====================================================================
+def verify_api_key(apiKey:str = Header(None)):
+    """
+    Protege a API de requests não autoriados
+
+    Esta função age como uma injeção de dependência do FastAPI. Ela intercepta a
+    requisição, extrai a api_key do cabeçalho HTTP e valida sua assinatura.
+    Args:
+        res_api_key (str): api_key extraida automaticamente do Header.
+    Raises:
+        HTTPException (401 UNAUTHORIZED): Se a api_key for inválida
+    Returns:
+        api_key
+    """
+    if not apiKey or apiKey!=API_KEY:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Acesso negado. API Key inválida ou ausente.")
+    return apiKey

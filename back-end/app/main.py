@@ -1,11 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
 from app.database import get_session, create_db_and_tables, engine
 from app.routes import auth,events,users, organizations
 from app.models import Category, CategoryType
+from app.security import verify_api_key
 
-app = FastAPI()
+app = FastAPI(dependencies=[Depends(verify_api_key)])
 
 # Add CORS middleware
 app.add_middleware(
@@ -20,6 +22,8 @@ app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(auth.router) ## inclui as rotas do auth no arquivo principal
 app.include_router(organizations.router)
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 def popular_categorias_iniciais():
     """Lê o Enum CategoryType e cria todas as categorias no banco automaticamente."""

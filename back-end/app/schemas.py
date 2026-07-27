@@ -192,3 +192,43 @@ class OrganizationUpdateSchema(BaseModel):
                 raise ValueError('Este campo não pode estar vazio ou conter apenas espaços em branco.')
             return texto_limpo
         return value
+
+class OrganizationResponseSchema(BaseModel):
+    """Molde de saída para os dados de uma organização."""
+    id: int
+    name: str
+    description: str
+    creator_id: int
+    picture_profile: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class PaginatedOrganizationResponse(BaseModel):
+    """Molde de saída para a paginação de organizações."""
+    current_page: int
+    limit: int
+    total_records: int 
+    total_pages: int
+    data: List[OrganizationResponseSchema]
+
+class CategoryResponseSchema(BaseModel):
+    """Molde de saída para listar as categorias disponíveis para os eventos."""
+    id: int
+    type: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class CommentResponseSchema(BaseModel):
+    """Molde de saída para listar os comentários de um evento."""
+    id: int
+    content: str
+    created_at: datetime
+    user_id: int
+    author: UserResponseSchema # Inclui os dados do usuário que fez o comentário
+
+    class Config:
+        from_attributes = True

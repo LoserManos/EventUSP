@@ -1,3 +1,5 @@
+import { User } from './user';
+
 export interface Event {
   id: number;
   title: string;
@@ -10,4 +12,5 @@ export interface Event {
   organization_id?: number | null;
   banner?: string | null;
   created_at: string; 
+  interested?: User[];
 }

@@ -5,8 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const hostUri = Constants?.expoConfig?.hostUri;
 const localIp = hostUri ? hostUri.split(':')[0] : 'localhost';
 const API_URL = process.env.EXPO_PUBLIC_API_URL || `http://${localIp}:8000`;
+// const API_URL = `https://eventusp-back-end.onrender.com/`;
 
 export const api = axios.create({
+  headers: {apiKey: 'CHAVE SUPER SECRETAAAAAA2'},
   baseURL: API_URL,
   timeout: 10000,
 });
