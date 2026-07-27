@@ -205,3 +205,70 @@ def test_add_comment_unauthorized(client):
     response = client.post("/eventos/1/comentarios", json={"content": "Hacker anonimo!"})
     
     assert response.status_code == 401
+
+# Cenário 12: Listar usuários que curtiram um evento
+def test_get_event_likes_list(client):
+    """Garante que a API retorna a lista de usuários que curtiram o evento."""
+    user_body = {"name": "Liker List", "nickname": "liker_list", "email": "likerlist@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json={"email": "likerlist@teste.com", "password": "123"}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    event_body = {"title": "Festa da Lista", "start_date": "2027-01-01T20:00:00", "duration": 240, "local": "Salão", "category_id": 1}
+    evento_id = client.post("/eventos/", json=event_body, headers=headers).json()["evento_id"]
+
+    # Curte o evento
+    client.post(f"/eventos/{evento_id}/curtir", headers=headers)
+
+    # Busca a lista de curtidas
+    response = client.get(f"/eventos/{evento_id}/curtidas")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data) == 1
+    assert data[0]["nickname"] == "liker_list"
+
+# Cenário 13: Listar usuários com interesse em um evento
+def test_get_event_interests_list(client):
+    """Garante que a API retorna a lista de usuários interessados no evento."""
+    user_body = {"name": "Interest List", "nickname": "interest_list", "email": "interestlist@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json={"email": "interestlist@teste.com", "password": "123"}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    event_body = {"title": "Palestra da Lista", "start_date": "2027-02-01T10:00:00", "duration": 120, "local": "Laboratório", "category_id": 3}
+    evento_id = client.post("/eventos/", json=event_body, headers=headers).json()["evento_id"]
+
+    # Demonstra interesse
+    client.post(f"/eventos/{evento_id}/interesse", headers=headers)
+
+    # Busca a lista de interesses
+    response = client.get(f"/eventos/{evento_id}/interesses")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data) == 1
+    assert data[0]["nickname"] == "interest_list"
+
+# Cenário 14: Listar comentários de um evento
+def test_get_event_comments_list(client):
+    """Garante que a API retorna a lista de comentários formatada com o autor."""
+    user_body = {"name": "Comment List", "nickname": "comment_list", "email": "commentlist@teste.com", "password": "123"}
+    client.post("/auth/signup", json=user_body)
+    token = client.post("/auth/login", json={"email": "commentlist@teste.com", "password": "123"}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    event_body = {"title": "Roda de Conversa Listada", "start_date": "2027-03-01T10:00:00", "duration": 60, "local": "Sala 1", "category_id": 5}
+    evento_id = client.post("/eventos/", json=event_body, headers=headers).json()["evento_id"]
+
+    # Adiciona um comentário
+    client.post(f"/eventos/{evento_id}/comentarios", json={"content": "Excelente evento!"}, headers=headers)
+
+    # Busca a lista de comentários (Não requer autenticação)
+    response = client.get(f"/eventos/{evento_id}/comentarios")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert len(data) == 1
+    assert data[0]["content"] == "Excelente evento!"
+    assert data[0]["author"]["nickname"] == "comment_list" # Verifica se populou os dados do autor

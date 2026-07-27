@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlmodel import Session, select, desc, asc, func
-from typing import Optional
+from typing import Optional, List
 import os
 import shutil
 
 from app.database import get_session
-from app.schemas import EventCreateSchema, EventUpdateSchema, EventResponseSchema, CommentCreateSchema, PaginatedEventResponse, CategoryResponseSchema
+from app.schemas import EventCreateSchema, EventUpdateSchema, EventResponseSchema, CommentCreateSchema, PaginatedEventResponse, CategoryResponseSchema, UserResponseSchema, CommentResponseSchema
 from app.models import Event, User, Likes, Interests, Follower, Comment, Event_picture, Category
 from app.security import get_actual_user
 
@@ -190,6 +190,30 @@ def add_comment(evento_id: int, comment_data: CommentCreateSchema, current_user:
     session.add(new_comment)
     session.commit()
     return {"mensagem": "Comentário adicionado."}
+
+# Listar quem curtiu o evento
+@router.get("/{evento_id}/curtidas", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def get_event_likes(evento_id: int, session: Session = Depends(get_session)):
+    event = session.get(Event, evento_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento não encontrado.")
+    return event.likers
+
+# Listar quem tem interesse (vagas) no evento
+@router.get("/{evento_id}/interesses", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def get_event_interests(evento_id: int, session: Session = Depends(get_session)):
+    event = session.get(Event, evento_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento não encontrado.")
+    return event.interested
+
+# Listar os comentários do evento
+@router.get("/{evento_id}/comentarios", status_code=status.HTTP_200_OK, response_model=List[CommentResponseSchema])
+def get_event_comments(evento_id: int, session: Session = Depends(get_session)):
+    event = session.get(Event, evento_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento não encontrado.")
+    return event.comments
 
 
 ### --- 4. GESTÃO DE IMAGENS DO EVENTO --- ###
