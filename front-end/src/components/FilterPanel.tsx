@@ -1,7 +1,7 @@
 import { colors, globalStyles } from '@/styles/global';
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { EventFilters } from '@/storage/eventAPI';
+import { EventFilters } from '@/services/eventService';
 
 // Espelho do enum CategoryType do models.py
 const CATEGORY_TYPES = [

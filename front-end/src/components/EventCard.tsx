@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { colors } from '@/styles/global';
 
-const ACCENT = "#87d4e4";
-const ACCENT_DARK = "#5bbdd0";
+import { useRouter } from "expo-router";
+import { eventsService } from "@/services/eventService";
+import { useFetchUser } from "@/hooks/useFetchUser";
+
+const ACCENT = colors.orangePrimary;
+const ACCENT_DARK = '#d9971c';
 const eventImage = require("../../assets/images/Card.png");
 
 interface EventCardProps {
+  id?: number | string;
   title?: string;
   organizer?: string;
   location?: string;
@@ -17,6 +23,7 @@ interface EventCardProps {
 }
 
 export function EventCard({
+  id,
   title = "matraca x",
   organizer = "ECA Jr.",
   location = "Vala da FAUD-USP",
@@ -26,9 +33,37 @@ export function EventCard({
   image = eventImage,
 }: EventCardProps) {
   const [saved, setSaved] = useState(false);
+  const router = useRouter();
+  const { user: currentUser } = useFetchUser();
+
+  useEffect(() => {
+    if (id && currentUser) {
+      eventsService.getEventInterests(Number(id))
+        .then(users => {
+          setSaved(users.some(u => u.id === currentUser.id));
+        })
+        .catch(console.error);
+    }
+  }, [id, currentUser]);
+
+  const handleToggleSaved = async () => {
+    if (!id) return;
+    setSaved((s) => !s);
+    try {
+      await eventsService.toggleInterest(Number(id));
+    } catch (e) {
+      setSaved((s) => !s); // rollback
+    }
+  };
+
+  const handlePress = () => {
+    if (id) {
+      router.push(`/event/${id}`);
+    }
+  };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handlePress}>
       <View style={styles.content}>
         <Image source={image} style={styles.image} resizeMode="cover" />
 
@@ -43,7 +78,7 @@ export function EventCard({
                   <Text style={styles.badgeText}>Gratuito</Text>
                 </View>
               ) : null}
-              <TouchableOpacity onPress={() => setSaved((s) => !s)} style={styles.saveButton}>
+              <TouchableOpacity onPress={handleToggleSaved} style={styles.saveButton}>
                 <MaterialCommunityIcons 
                   name={saved ? "bookmark" : "bookmark-outline"} 
                   size={20} 
@@ -59,7 +94,7 @@ export function EventCard({
           <MetaRow icon="clock-outline" label={time} />
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

@@ -4,7 +4,7 @@ import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { SocialUser } from '@/types/social';
 import { colors } from '@/styles/global';
 
-const userImage = require('@/assets/images/LA.png')
+const userImage = require('@/assets/images/default_avatar.jpg')
 
 export function UserCard({ user, onPress }: { user: SocialUser; onPress?: () => void }) {
   return (
