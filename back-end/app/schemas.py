@@ -221,3 +221,14 @@ class CategoryResponseSchema(BaseModel):
     
     class Config:
         from_attributes = True
+
+class CommentResponseSchema(BaseModel):
+    """Molde de saída para listar os comentários de um evento."""
+    id: int
+    content: str
+    created_at: datetime
+    user_id: int
+    author: UserResponseSchema # Inclui os dados do usuário que fez o comentário
+
+    class Config:
+        from_attributes = True
