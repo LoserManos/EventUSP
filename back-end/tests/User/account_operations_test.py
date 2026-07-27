@@ -1,6 +1,6 @@
 import pytest
 from sqlmodel import Session, select
-from app.models import User
+from app.models import User, Organization, MemberOrganization, OrgRole
 import os
 import shutil
 
@@ -111,6 +111,7 @@ def test_edit_profile_blank_spaces(client):
     response = client.patch("/usuarios/me", json=body, headers=headers)
     assert response.status_code == 422
 
+# Cenário 14
 def test_list_users(client,auth_client):
     """Garante que a listagem padrão retorna todos os usuários com a paginação correta."""
     
@@ -128,7 +129,7 @@ def test_list_users(client,auth_client):
     assert data["total_records"] >= 3  # Pelo menos os 3 que acabamos de criar
     assert "data" in data
 
-
+# Cenário 15
 def test_list_users_with_filter(client):
     """Garante que o filtro 'search' funciona usando ilike no nickname (ignorando maiúsculas/minúsculas)."""
     
@@ -150,7 +151,7 @@ def test_list_users_with_filter(client):
     nicknames_found = [user["nickname"] for user in data["data"]]
     assert any("leocesar" in nick for nick in nicknames_found)
 
-
+# Cenário 16
 def test_list_users_custom_pagination(client):
     """Garante que os parâmetros limit e page alteram a devolução dos dados."""
     
@@ -167,7 +168,7 @@ def test_list_users_custom_pagination(client):
     assert len(data["data"]) == 1
     assert data["total_pages"] == data["total_records"] # Se o limite é 1, total_pages = total_records
 
-
+# Cenário 17
 def test_list_users_validation_error(client):
     """Garante que a API não aceita páginas inválidas ou limites abusivos."""
     
@@ -184,12 +185,13 @@ def test_list_users_validation_error(client):
     resp_limit = client.get("/usuarios/?limit=500", headers=headers)
     assert resp_limit.status_code == 422
 
-
+# Cenário 18
 def test_list_users_no_autentfication(client):
     """Proteção básica da rota."""
     response = client.get("/usuarios/")
     assert response.status_code == 401
 
+# Cenário 19
 def test_list_users_no_result(client):
     """Garante que buscar por um termo inexistente retorna status 200 com lista vazia."""
     
@@ -207,6 +209,42 @@ def test_list_users_no_result(client):
     assert data["total_records"] == 0
     assert data["total_pages"] == 0
     assert data["data"] == []  # Garante que o array de usuários veio totalmente vazio
+
+# Cenário 20: Listar organizações que o usuário faz parte
+def test_get_user_organizations(client, db_session):
+    """Garante que a rota retorna apenas organizações onde o vínculo do usuário tem status=True."""
+    client.post("/auth/signup", json={"name": "Org Lover", "nickname": "orglover", "email": "lover@teste.com", "password": "123"})
+    user_id = client.post("/auth/login", json={"email": "lover@teste.com", "password": "123"}).json()["id_user"]
+
+    # Criar duas organizações direto no banco
+    org_aprovada = Organization(name="Org Aprovada", description="A", creator_id=user_id)
+    org_pendente = Organization(name="Org Pendente", description="P", creator_id=user_id)
+    db_session.add_all([org_aprovada, org_pendente])
+    db_session.commit()
+
+    # Adicionar o vínculo: uma aprovada (True) e uma pendente (False)
+    db_session.add(MemberOrganization(user_id=user_id, organization_id=org_aprovada.id, role=OrgRole.MEMBER, status=True))
+    db_session.add(MemberOrganization(user_id=user_id, organization_id=org_pendente.id, role=OrgRole.MEMBER, status=False))
+    db_session.commit()
+
+    # Bater na nova rota
+    token = client.post("/auth/login", json={"email": "lover@teste.com", "password": "123"}).json()["access_token"]
+    response = client.get(f"/usuarios/{user_id}/organizacoes", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 200
+    orgs = response.json()
+
+    # Verifica se o banco filtrou corretamente e só retornou a org aprovada
+    ids_orgs = [o["id"] for o in orgs]
+    assert org_aprovada.id in ids_orgs
+    assert org_pendente.id not in ids_orgs
+
+# Cenário 21: Tentar listar organizações de um usuário que não existe
+def test_get_user_organizations_not_found(auth_client):
+    """Garante que Erro 404 é retornado se o usuário não for encontrado."""
+    response = auth_client.get("/usuarios/9999/organizacoes")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Usuário não encontrado."
 
 
 

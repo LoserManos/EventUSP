@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlmodel import Session, select, func
 import os
 import shutil
@@ -6,7 +6,8 @@ import shutil
 from app.database import get_session
 from app.models import User, Organization, MemberOrganization, OrgRole
 from app.security import get_actual_user
-from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema
+from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema, PaginatedOrganizationResponse, UserResponseSchema
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/organizacoes",
@@ -354,3 +355,49 @@ def transfer_ownership(
     session.commit()
 
     return {"mensagem": f"Propriedade da organização transferida com sucesso para o usuário {novo_dono_id}."}
+
+# Listar Organizações (Com Paginação)
+@router.get("/", status_code=status.HTTP_200_OK, response_model=PaginatedOrganizationResponse)
+def list_organizations(
+    current_user: User = Depends(get_actual_user),
+    page: int = Query(1, ge=1), 
+    limit: int = Query(20, ge=1, le=100),
+    search: Optional[str] = None,
+    session: Session = Depends(get_session)
+):
+    offset = (page - 1) * limit
+    query = select(Organization)
+    
+    if search:
+        query = query.where(Organization.name.ilike("%" + search + "%"))
+        
+    total_records = session.exec(select(func.count()).select_from(query.subquery())).one()
+    orgs = session.exec(query.offset(offset).limit(limit)).all()
+    
+    return {
+        "current_page": page,
+        "limit": limit,
+        "total_records": total_records,
+        "total_pages": (total_records + limit - 1) // limit,
+        "data": orgs
+    }
+
+# Listar Membros de uma Organização Específica
+@router.get("/{org_id}/membros", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def list_organization_members(
+    org_id: int, 
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+    
+    # Busca apenas os usuários que têm vínculo aprovado (status == True) com a organização
+    stmt = select(User).join(MemberOrganization).where(
+        MemberOrganization.organization_id == org_id,
+        MemberOrganization.status == True
+    )
+    membros = session.exec(stmt).all()
+    
+    return membros

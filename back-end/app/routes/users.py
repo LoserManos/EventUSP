@@ -4,9 +4,9 @@ import os
 import shutil
 from typing import Optional
 from app.database import get_session
-from app.models import User, Follower
+from app.models import User, Follower, Organization, MemberOrganization
 from app.security import get_actual_user 
-from app.schemas import UserUpdateSchema, UserResponseSchema, PaginatedUserResponse
+from app.schemas import UserUpdateSchema, UserResponseSchema, PaginatedUserResponse, OrganizationResponseSchema
 from typing import List
 
 router = APIRouter(
@@ -154,8 +154,18 @@ def get_following(user_id: int, session: Session = Depends(get_session)):
     
     return user.following
   
-### ATENÇÃO LEO! QUANDO FOR MECHER AQUI SIGA O MEDELO QUE ESTÁ NO AUTH.PY PARA PADRONIZAR O PROJETO
-### SEGUIR O MODELO, ESTOU QUERENDO DIZER PARA CRIAR TIPOS PARA OS ARGUMENTOS DE CADA FUNÇÃO E CRIAR TIPOS PARA OS RETURNS(SE QUISER SABER O PQ MANDA UM SALVE NO ZAP)
-#### OS TIPOS ESTÃO NO ARQUIVO SCHEMA.PY, USAR ROUTER TAMBÉM DEPOS QUE TERMINAR A ROTA ADD ELA NA MAIN Q NEM EU FIZ, O RETORNA DA FUÇÃO CASO DE ERRO USE O HTTMeXEPECTION IGUAL NO AUTH.PY
-### SE DER BOM A FUNÇÃO, COLOCA O STATUS CODE, LÁ EM CIMA DELA(DO LADO DA ROTA)
-### O RETURN DA FUNÇÃO É TAMBÉM TIPADO DO LADO DA ROTA, ISSO FAZ COM QUE O RETURN SEJA FILTRADO!! POR EXEMPLO NA FUNÇÃO DE CADASTRAR O USUÁRIO, EU RETORNO O USER COMPLETO, PORÉM VAI SER FILTRADO COM BASE NO TIPO QUE COLOQUEI LÁ
+# Listar Organizações das quais o Usuário é Membro
+@router.get("/{user_id}/organizacoes", status_code=status.HTTP_200_OK, response_model=List[OrganizationResponseSchema])
+def get_user_organizations(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    # Busca as organizações onde o usuário possui vínculo aprovado
+    stmt = select(Organization).join(MemberOrganization).where(
+        MemberOrganization.user_id == user_id,
+        MemberOrganization.status == True
+    )
+    orgs = session.exec(stmt).all()
+    
+    return orgs
