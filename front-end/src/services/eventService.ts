@@ -1,5 +1,7 @@
 import { api } from './api'; 
 import { Event } from '../types/event';
+import { User } from '../types/user';
+import { Comment } from '../types/comment';
 
 // Interface que define o que o Backend (EventCreateSchema) espera receber 
 export interface EventCreateData {
@@ -46,6 +48,31 @@ export const eventsService = {
 
   async toggleInterest(id: number): Promise<{ mensagem: string }> {
     const response = await api.post(`/eventos/${id}/interesse`);
+    return response.data;
+  },
+
+  async toggleLike(id: number): Promise<{ mensagem: string }> {
+    const response = await api.post(`/eventos/${id}/curtir`);
+    return response.data;
+  },
+
+  async getEventLikes(id: number): Promise<User[]> {
+    const response = await api.get(`/eventos/${id}/curtidas`);
+    return response.data;
+  },
+
+  async getEventInterests(id: number): Promise<User[]> {
+    const response = await api.get(`/eventos/${id}/interesses`);
+    return response.data;
+  },
+
+  async getEventComments(id: number): Promise<Comment[]> {
+    const response = await api.get(`/eventos/${id}/comentarios`);
+    return response.data;
+  },
+
+  async addComment(id: number, content: string): Promise<{ mensagem: string }> {
+    const response = await api.post(`/eventos/${id}/comentarios`, { content });
     return response.data;
   }
 };

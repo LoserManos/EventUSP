@@ -8,7 +8,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Modal,
-  FlatList
+  FlatList,
+  TextInput,
+  Platform,
+  LayoutAnimation,
+  UIManager
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,13 +20,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEventDetails } from '@/hooks/useEventDetails';
 import { useFetchUser } from '@/hooks/useFetchUser';
-import { Event } from '@/types/event';
 import { colors } from '@/styles/global';
 
-const ACCENT = '#87d4e4';
-const ACCENT_DARK = '#5bbdd0';
+const ACCENT = colors.orangePrimary;
+const ACCENT_DARK = '#d9971c';
 const DEFAULT_COVER = require('../../../assets/images/Card.png');
 const DEFAULT_AVATAR = require('../../../assets/images/default_avatar.jpg');
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 function InfoRow({ icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -42,24 +49,51 @@ export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const { event, loading, toggleInterest } = useEventDetails(id as string);
+  const { event, likers, interested, comments, loading, toggleLike, toggleInterest, addComment } = useEventDetails(id as string);
   const { user: currentUser } = useFetchUser();
-  const [saved, setSaved] = useState(false);
   const [going, setGoing] = useState(false);
+  
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [localLikers, setLocalLikers] = useState<any[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
     if (event && currentUser) {
-      const isInterested = event.interested?.some(u => u.id === currentUser.id);
+      const isLiked = likers.some(u => u.id === currentUser.id);
+      setLiked(isLiked || false);
+      setLikesCount(event.likes || 0);
+      setLocalLikers(likers);
+
+      const isInterested = interested.some(u => u.id === currentUser.id);
       setGoing(isInterested || false);
     }
-  }, [event, currentUser]);
+  }, [event, likers, interested, currentUser]);
 
-  const handleToggleGoing = async () => {
-    // Atualiza estado otimisticamente
+  const handleToggleInterest = async () => {
     setGoing(!going);
-    // Chama API
     await toggleInterest();
+  };
+
+  const handleToggleLike = async () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    const isNowLiked = !liked;
+    setLiked(isNowLiked);
+    setLikesCount(prev => isNowLiked ? prev + 1 : prev - 1);
+    
+    if (isNowLiked && currentUser) {
+      setLocalLikers(prev => [currentUser, ...prev]);
+    } else if (!isNowLiked && currentUser) {
+      setLocalLikers(prev => prev.filter(u => u.id !== currentUser.id));
+    }
+    await toggleLike();
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return;
+    await addComment(newComment);
+    setNewComment("");
   };
 
   if (loading) {
@@ -106,11 +140,11 @@ export default function EventDetailsScreen() {
               <MaterialCommunityIcons name="arrow-left" size={24} color="#ffffff" />
             </TouchableOpacity>
             <View style={styles.rightControls}>
-              <TouchableOpacity onPress={() => setSaved(!saved)} style={styles.iconButton}>
+              <TouchableOpacity onPress={handleToggleInterest} style={styles.iconButton}>
                 <MaterialCommunityIcons 
-                  name={saved ? "bookmark" : "bookmark-outline"} 
+                  name={going ? "bookmark" : "bookmark-outline"} 
                   size={22} 
-                  color={saved ? ACCENT_DARK : "#ffffff"} 
+                  color={going ? ACCENT_DARK : "#ffffff"} 
                 />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}>
@@ -153,7 +187,7 @@ export default function EventDetailsScreen() {
           <View style={styles.attendeesBox}>
             <TouchableOpacity style={styles.attendeesLeft} onPress={() => setIsModalVisible(true)}>
               <View style={styles.avatarsRow}>
-                {event.interested?.slice(0, 3).map((user, index) => (
+                {localLikers.slice(0, 3).map((user, index) => (
                   <Image 
                     key={user.id}
                     source={user.picture_profile ? { uri: user.picture_profile } : DEFAULT_AVATAR} 
@@ -162,16 +196,21 @@ export default function EventDetailsScreen() {
                 ))}
               </View>
               <Text style={styles.attendeesText}>
-                <Text style={{ fontWeight: 'bold', color: '#ffffff' }}>{event.interested?.length || 0}</Text> interessados
+                <Text style={{ fontWeight: 'bold', color: '#ffffff' }}>{likesCount}</Text> curtiram esse evento
               </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
-              onPress={handleToggleGoing}
-              style={[styles.goingButton, going && { backgroundColor: `${ACCENT}33` }]}
+              onPress={handleToggleLike}
+              style={[styles.likeButton, liked && { backgroundColor: `${ACCENT}33` }]}
             >
-              <Text style={[styles.goingButtonText, going && { color: ACCENT_DARK }]}>
-                {going ? "Interessado ✓" : "Tenho interesse"}
+              <MaterialCommunityIcons 
+                name={liked ? "heart" : "heart-outline"} 
+                size={18} 
+                color={liked ? ACCENT_DARK : "#ffffff"} 
+              />
+              <Text style={[styles.likeButtonText, liked && { color: ACCENT_DARK }]}>
+                {likesCount}
               </Text>
             </TouchableOpacity>
           </View>
@@ -185,22 +224,41 @@ export default function EventDetailsScreen() {
             </Text>
           </View>
 
-          {/* Spacer for bottom CTA */}
+          {/* Comments */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Comentários ({comments.length})</Text>
+            
+            {/* Comment Input */}
+            <View style={styles.commentInputRow}>
+              <TextInput 
+                style={styles.commentInput} 
+                placeholder="Adicione um comentário..." 
+                placeholderTextColor="#9ca3af"
+                value={newComment}
+                onChangeText={setNewComment}
+                onSubmitEditing={handleAddComment}
+              />
+              <TouchableOpacity style={styles.commentSendBtn} onPress={handleAddComment}>
+                <MaterialCommunityIcons name="send" size={20} color={ACCENT} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Comment List */}
+            {comments.map((comment) => (
+              <View key={comment.id} style={styles.commentRow}>
+                <Image source={comment.author.picture_profile ? { uri: comment.author.picture_profile } : DEFAULT_AVATAR} style={styles.commentAvatar} />
+                <View style={styles.commentBubble}>
+                  <Text style={styles.commentAuthor}>{comment.author.nickname}</Text>
+                  <Text style={styles.commentContent}>{comment.content}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom CTA */}
-      <View style={styles.bottomCTA}>
-        <TouchableOpacity 
-          onPress={handleToggleGoing}
-          style={styles.ctaButton}
-        >
-          <Text style={styles.ctaButtonText}>
-            {going ? "Interesse confirmado" : (isFree ? "Confirmar interesse" : "Comprar ingresso")}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Modal de Interessados */}
       <Modal
@@ -212,13 +270,13 @@ export default function EventDetailsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Interessados ({event.interested?.length || 0})</Text>
+              <Text style={styles.modalTitle}>Curtiram esse evento ({likesCount})</Text>
               <TouchableOpacity onPress={() => setIsModalVisible(false)}>
                 <MaterialCommunityIcons name="close" size={24} color="#ffffff" />
               </TouchableOpacity>
             </View>
             <FlatList
-              data={event.interested}
+              data={localLikers}
               keyExtractor={item => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={styles.modalUserRow}>
@@ -301,15 +359,16 @@ const styles = StyleSheet.create({
     right: 20,
   },
   badgeFree: {
-    backgroundColor: ACCENT,
-    paddingHorizontal: 10,
+    backgroundColor: `${ACCENT}25`,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
+
   badgeFreeText: {
-    color: '#0a3540',
+    color: ACCENT_DARK,
     fontSize: 12,
     fontFamily: 'Montserrat_700Bold',
   },
@@ -395,6 +454,7 @@ const styles = StyleSheet.create({
   },
   avatarsRow: {
     flexDirection: 'row',
+    width: 84, // Largura fixa
   },
   avatarImg: {
     width: 36,
@@ -408,15 +468,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9ca3af',
   },
-  goingButton: {
-    backgroundColor: ACCENT,
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
-  goingButtonText: {
-    color: '#0a3540',
-    fontSize: 13,
+  likeButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
     fontFamily: 'Montserrat_700Bold',
   },
   section: {
@@ -498,5 +561,49 @@ const styles = StyleSheet.create({
   modalUserNickname: {
     fontSize: 13,
     color: '#9ca3af',
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: colors.backgroundDarkSecondary,
+    borderRadius: 20,
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingVertical: 4,
+  },
+  commentInput: {
+    flex: 1,
+    color: '#ffffff',
+    height: 40,
+  },
+  commentSendBtn: {
+    padding: 8,
+  },
+  commentRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 12,
+  },
+  commentBubble: {
+    flex: 1,
+    backgroundColor: colors.backgroundDarkSecondary,
+    padding: 12,
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+  },
+  commentAuthor: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  commentContent: {
+    color: '#d1d5db',
+    lineHeight: 20,
   },
 });
