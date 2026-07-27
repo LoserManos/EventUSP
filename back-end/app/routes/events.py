@@ -5,8 +5,8 @@ import os
 import shutil
 
 from app.database import get_session
-from app.schemas import EventCreateSchema, EventUpdateSchema, EventResponseSchema, CommentCreateSchema, PaginatedEventResponse
-from app.models import Event, User, Likes, Interests, Follower, Comment, Event_picture
+from app.schemas import EventCreateSchema, EventUpdateSchema, EventResponseSchema, CommentCreateSchema, PaginatedEventResponse, CategoryResponseSchema
+from app.models import Event, User, Likes, Interests, Follower, Comment, Event_picture, Category
 from app.security import get_actual_user
 
 router = APIRouter(
@@ -77,6 +77,14 @@ def list_following_events(
     eventos = session.exec(query.offset(offset).limit(limite)).all()
 
     return {"pagina_atual": pagina, "dados": eventos}
+
+# Listar Categorias de Eventos Disponíveis
+@router.get("/categorias", status_code=status.HTTP_200_OK, response_model=list[CategoryResponseSchema])
+def list_categories(session: Session = Depends(get_session)):
+    """Retorna todas as categorias pré-cadastradas no sistema."""
+    # Busca todas as categorias no banco de dados
+    categorias = session.exec(select(Category)).all()
+    return categorias
 
 
 ### --- 2. DETALHES, EDIÇÃO E DELEÇÃO --- ###
