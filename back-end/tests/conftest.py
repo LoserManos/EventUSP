@@ -24,6 +24,7 @@ def client(db_session):
         yield db_session
     app.dependency_overrides[get_session] = override_get_session
     with TestClient(app) as test_client:
+        test_client.headers.update({"apiKey": "CHAVE SUPER SECRETAAAAAA2"})
         yield test_client
     app.dependency_overrides.clear()
 

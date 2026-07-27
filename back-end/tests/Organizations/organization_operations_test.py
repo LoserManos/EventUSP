@@ -1,7 +1,7 @@
 import pytest
 import os
 from sqlmodel import select
-from app.models import Organization, MemberOrganization, OrgRole
+from app.models import Organization, MemberOrganization, OrgRole, User
 
 # Cenario 1: Sucesso Usuário é ADMIN da organização
 def test_upload_org_photo_success(client, db_session):
@@ -557,3 +557,70 @@ def test_demote_creator_blocked(client, db_session):
 
     assert response.status_code == 403
     assert response.json()["detail"] == "O criador da organização não pode perder o cargo de administrador."
+
+# Cenário 23: Listar organizações paginadas com sucesso
+def test_list_organizations_success(auth_client, db_session):
+    """Garante que a rota de listagem geral retorna o formato paginado correto."""
+    user = User(name="Org Maker", nickname="orgmaker", email="maker@org.com", password="123")
+    db_session.add(user)
+    db_session.commit()
+
+    org1 = Organization(name="Clube do Livro", description="Leitura", creator_id=user.id)
+    org2 = Organization(name="Clube do Filme", description="Cinema", creator_id=user.id)
+    db_session.add_all([org1, org2])
+    db_session.commit()
+
+    response = auth_client.get("/organizacoes/")
+    data = response.json()
+    
+    assert response.status_code == 200
+    assert data["total_records"] >= 2
+    assert data["current_page"] == 1
+    assert len(data["data"]) >= 2
+    assert "name" in data["data"][0]
+
+# Cenário 24: Listar organizações usando filtro de busca
+def test_list_organizations_search(auth_client, db_session):
+    """Garante que o parâmetro de busca 'search' filtra corretamente pelo nome da organização."""
+    response = auth_client.get("/organizacoes/?search=Livro")
+    data = response.json()
+    
+    assert response.status_code == 200
+    # Verifica se a palavra 'Livro' está no nome das organizações retornadas
+    assert all("Livro" in org["name"] for org in data["data"])
+
+# Cenário 25: Listar membros de uma organização
+def test_list_organization_members(client, db_session):
+    """Garante que a lista de membros de uma organização retorna apenas usuários com status=True."""
+    # 1. Setup Criador
+    client.post("/auth/signup", json={"name": "Dono Membros", "nickname": "dono_membros", "email": "dono_membros@org.com", "password": "123"})
+    token_dono = client.post("/auth/login", json={"email": "dono_membros@org.com", "password": "123"}).json()["access_token"]
+    headers_dono = {"Authorization": f"Bearer {token_dono}"}
+
+    # 2. Setup Membro (Aprovado)
+    client.post("/auth/signup", json={"name": "Aprovado", "nickname": "aprovado", "email": "aprovado@org.com", "password": "123"})
+    aprovado_id = client.post("/auth/login", json={"email": "aprovado@org.com", "password": "123"}).json()["id_user"]
+
+    # 3. Setup Pendente
+    client.post("/auth/signup", json={"name": "Pendente", "nickname": "pendente", "email": "pendente@org.com", "password": "123"})
+    pendente_id = client.post("/auth/login", json={"email": "pendente@org.com", "password": "123"}).json()["id_user"]
+
+    # 4. Criar Org (o dono já entra como aprovado)
+    org_data = {"name": "Clube Teste Membros", "description": "Testando listagem."}
+    org_id = client.post("/organizacoes/", json=org_data, headers=headers_dono).json()["organizacao_id"]
+
+    # 5. Adicionar no banco os vínculos para forçar o teste
+    db_session.add(MemberOrganization(user_id=aprovado_id, organization_id=org_id, role=OrgRole.MEMBER, status=True))
+    db_session.add(MemberOrganization(user_id=pendente_id, organization_id=org_id, role=OrgRole.MEMBER, status=False))
+    db_session.commit()
+
+    # 6. Bater na rota
+    response = client.get(f"/organizacoes/{org_id}/membros", headers=headers_dono)
+    
+    assert response.status_code == 200
+    membros = response.json()
+    
+    # O Aprovado deve estar na lista. O pendente NÃO pode estar.
+    ids_retornados = [m["id"] for m in membros]
+    assert aprovado_id in ids_retornados
+    assert pendente_id not in ids_retornados

@@ -1,6 +1,6 @@
 import pytest
 from sqlmodel import Session, select
-from app.models import Event
+from app.models import Event, Category, CategoryType
 
 def test_listar_eventos_paginacao(client):
     """Garante que o feed retorna a quantidade correta de eventos e calcula o total."""
@@ -97,3 +97,21 @@ def test_listar_eventos_categoria_vazia(client):
     assert response.status_code == 200
     assert data["total_eventos"] == 0
     assert data["dados"] == []
+
+def test_list_category(client, db_session):
+    """Garante que a API retorna todas as categorias disponíveis no sistema."""
+    
+    # 1. Popula o banco de testes em memória antes de fazer a requisição
+    for tipo in CategoryType:
+        db_session.add(Category(type=tipo))
+    db_session.commit()
+
+    # 2. Bater na rota sem necessidade de autenticação (é uma info pública)
+    response = client.get("/eventos/categorias")
+    data = response.json()
+
+    assert response.status_code == 200
+    assert type(data) == list
+    assert len(data) > 0 
+    assert "id" in data[0]
+    assert "type" in data[0]
