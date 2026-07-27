@@ -212,3 +212,12 @@ class PaginatedOrganizationResponse(BaseModel):
     total_records: int 
     total_pages: int
     data: List[OrganizationResponseSchema]
+
+class CategoryResponseSchema(BaseModel):
+    """Molde de saída para listar as categorias disponíveis para os eventos."""
+    id: int
+    type: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
