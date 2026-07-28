@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/styles/global';
 import { useRouter } from 'expo-router';
-import { useCreateEvent } from '../../hooks/useCreateEvent';
+import { useCreateEvent } from '@/hooks/useCreateEvent';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CreateEventScreen() {

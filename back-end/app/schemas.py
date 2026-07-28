@@ -213,6 +213,17 @@ class PaginatedOrganizationResponse(BaseModel):
     total_pages: int
     data: List[OrganizationResponseSchema]
 
+class MemberOrganizationResponseSchema(BaseModel):
+    """Molde de saída para o status e papel do membro na organização."""
+    user_id: int
+    organization_id: int
+    role: str
+    status: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class CategoryResponseSchema(BaseModel):
     """Molde de saída para listar as categorias disponíveis para os eventos."""
     id: int

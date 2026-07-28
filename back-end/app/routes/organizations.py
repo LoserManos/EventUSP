@@ -6,7 +6,7 @@ import shutil
 from app.database import get_session
 from app.models import User, Organization, MemberOrganization, OrgRole
 from app.security import get_actual_user
-from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema, PaginatedOrganizationResponse, UserResponseSchema
+from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema, OrganizationResponseSchema, PaginatedOrganizationResponse, UserResponseSchema, MemberOrganizationResponseSchema
 from typing import List, Optional
 
 router = APIRouter(
@@ -183,6 +183,46 @@ def join_organization(
     session.commit()
 
     return {"mensagem": "Solicitação de entrada enviada com sucesso! Aguarde a aprovação de um administrador."}
+
+# Aceitar pedido de entrada de um usuário na organização (Apenas ADMIN)
+@router.patch("/{org_id}/membros/{alvo_id}/aceitar", status_code=status.HTTP_200_OK)
+def accept_member_request(
+    org_id: int, 
+    alvo_id: int, 
+    current_user: User = Depends(get_actual_user), 
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+
+    # Verifica se quem está executando a ação é ADMIN da organização
+    requester_membership = session.exec(select(MemberOrganization).where(
+        MemberOrganization.user_id == current_user.id,
+        MemberOrganization.organization_id == org_id
+    )).first()
+
+    if not requester_membership or requester_membership.role != OrgRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem aceitar solicitações de membros.")
+
+    # Busca o vínculo pendente do usuário alvo
+    target_membership = session.exec(select(MemberOrganization).where(
+        MemberOrganization.user_id == alvo_id,
+        MemberOrganization.organization_id == org_id
+    )).first()
+
+    if not target_membership:
+        raise HTTPException(status_code=404, detail="Solicitação de vínculo não encontrada para este usuário.")
+
+    if target_membership.status:
+        return {"mensagem": "O usuário já é um membro ativo desta organização."}
+
+    # Altera o status para True (aprovado)
+    target_membership.status = True
+    session.add(target_membership)
+    session.commit()
+
+    return {"mensagem": f"Solicitação do usuário {alvo_id} aceita com sucesso."}
 
 # Sair da Organização
 @router.delete("/{org_id}/sair", status_code=status.HTTP_200_OK)
@@ -382,6 +422,17 @@ def list_organizations(
         "data": orgs
     }
 
+# Buscar Organização por ID
+@router.get("/{org_id}", status_code=status.HTTP_200_OK, response_model=OrganizationResponseSchema)
+def get_organization_by_id(
+    org_id: int, 
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+    return org
+
 # Listar Membros de uma Organização Específica
 @router.get("/{org_id}/membros", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
 def list_organization_members(
@@ -401,3 +452,55 @@ def list_organization_members(
     membros = session.exec(stmt).all()
     
     return membros
+
+# Listar Pedidos Pendentes de Entrada na Organização (Apenas ADMIN)
+@router.get("/{org_id}/membros/pendentes", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def list_pending_organization_members(
+    org_id: int, 
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+    
+    # Verifica se quem está listando é ADMIN da organização
+    requester_membership = session.exec(select(MemberOrganization).where(
+        MemberOrganization.user_id == current_user.id,
+        MemberOrganization.organization_id == org_id
+    )).first()
+
+    if not requester_membership or requester_membership.role != OrgRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem visualizar os pedidos pendentes.")
+
+    # Busca apenas os usuários que possuem vínculo com status == False (pendente)
+    stmt = select(User).join(MemberOrganization).where(
+        MemberOrganization.organization_id == org_id,
+        MemberOrganization.status == False
+    )
+    membros_pendentes = session.exec(stmt).all()
+    
+    return membros_pendentes
+
+# Obter a situação (status) de um usuário específico na organização
+@router.get("/{org_id}/membros/{user_id}", status_code=status.HTTP_200_OK, response_model=MemberOrganizationResponseSchema)
+def get_organization_member_status(
+    org_id: int, 
+    user_id: int,
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+
+    stmt = select(MemberOrganization).where(
+        MemberOrganization.user_id == user_id,
+        MemberOrganization.organization_id == org_id
+    )
+    membership = session.exec(stmt).first()
+
+    if not membership:
+        raise HTTPException(status_code=404, detail="Vínculo de membro não encontrado para este usuário.")
+
+    return membership
