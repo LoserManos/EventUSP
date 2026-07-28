@@ -35,15 +35,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='map'
-        options={{
-          title: 'Mapa',
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome6 name='compass' size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name='social'
         options={{
           title: 'Social',
@@ -53,11 +44,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='create-event'
+        name='create'
         options={{
-          title: 'Criar Evento',
+          title: 'Criar',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name='add-circle' size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name='settings'
+        options={{
+          title: 'Opcoes',
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesome6 name='gear' size={size} color={color} />
           ),
         }}
       />
