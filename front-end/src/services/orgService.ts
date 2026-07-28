@@ -11,10 +11,30 @@ export const orgService = {
     return response.data;
   },
 
-  // Obter detalhes de uma organização específica
+  //// Obter detalhes de uma organização específica
+  //async getOrg(id: number): Promise<Organization> {
+  //  const response = await api.get(`/organizacoes/${id}`);
+  //  return response.data;
+  //},
+
   async getOrg(id: number): Promise<Organization> {
-    const response = await api.get(`/organizacoes/${id}`);
-    return response.data;
+    // Como não sabemos a página exata, buscamos a primeira página com um limite alto ou buscamos até achar
+    let page = 1;
+    let foundOrg: Organization | null = null;
+
+    while (page <= 5) { // Limite de segurança para evitar loops infinitos
+      const response = await this.listOrgs(page, 50, ''); // ou listOrgs(page, 50, '')
+      foundOrg = response.data.find((org: Organization) => org.id === id) || null;
+      
+      if (foundOrg || page >= response.total_pages) break;
+      page++;
+    }
+
+    if (!foundOrg) {
+      throw new Error("Organização não encontrada via listagem.");
+    }
+
+    return foundOrg;
   },
 
   // Criar Organização
@@ -60,9 +80,18 @@ export const orgService = {
   },
 
   // Listar membros de uma organização
-  async getOrgMembers(id: number): Promise<OrgMember[]> {
+  async getOrgMembers(id: number) {
     const response = await api.get(`/organizacoes/${id}/membros`);
     return response.data;
+  },
+
+  async getMemberStatus(orgId: number, userId: number) {
+    try {
+      const response = await api.get(`/organizacoes/${orgId}/membros/${userId}`);
+      return response.data; // Retorna { user_id, organization_id, role, status }
+    } catch {
+      return null;
+    }
   },
 
   // [Previsão] Aprovar solicitação de entrada de um membro (Admin)

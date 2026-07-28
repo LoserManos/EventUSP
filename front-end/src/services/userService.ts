@@ -1,5 +1,5 @@
 import { api } from './api'; 
-import { User, PaginatedUserResponse } from '../types/user';
+import { User, PaginatedUserResponse, UserUpdateDTO } from '../types/user';
 
 export const userService = {
   // Listar usuários com paginação e busca opcional (GET /usuarios/)
@@ -17,19 +17,19 @@ export const userService = {
     return response.data;
   },
 
-  //Atualizar o perfil do próprio usuário (PATCH /usuarios/me)
-  async updateMyProfile(userData: Partial<User>): Promise<User> {
+  // Atualizar o perfil do próprio usuário usando o DTO correto (PATCH /usuarios/me)
+  async updateMyProfile(userData: UserUpdateDTO): Promise<User> {
     const response = await api.patch('/usuarios/me', userData);
     return response.data;
   },
 
-  //Excluir conta do próprio usuário (DELETE /usuarios/me)
+  // Excluir conta do próprio usuário (DELETE /usuarios/me)
   async deleteMyProfile(): Promise<{ mensagem: string; usuario_id: number }> {
     const response = await api.delete('/usuarios/me');
     return response.data;
   },
 
-  //Upload de foto de perfil (POST /usuarios/me/foto)
+  // Upload de foto de perfil (POST /usuarios/me/foto)
   async uploadMyPhoto(file: File | Blob): Promise<{ mensagem: string; picture_profile: string }> {
     const formData = new FormData();
     formData.append('file', file);
@@ -71,5 +71,4 @@ export const userService = {
     const response = await api.get(`/usuarios/${userId}/seguindo`);
     return response.data;
   }
-
 };

@@ -37,7 +37,7 @@ export default function SocialPage() {
         </TouchableOpacity>
       </View>
 
-      {/* Renderização Condicional Limpa dos Feeds Desvinculados */}
+      {/* Renderização Condicional dos Feeds */}
       {type === 'user' ? (
         <UserFeed searchQuery={searchQuery} />
       ) : (
