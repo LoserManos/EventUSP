@@ -169,3 +169,30 @@ def get_user_organizations(user_id: int, session: Session = Depends(get_session)
     orgs = session.exec(stmt).all()
     
     return orgs
+
+# Listar Eventos que o Usuário Curtiu (Liked Events)
+@router.get("/{user_id}/eventos/curtidos", status_code=status.HTTP_200_OK, response_model=List[EventResponseSchema])
+def get_user_liked_events(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    return user.liked_events
+
+# Listar Eventos que o Usuário tem Interesse (Interested Events)
+@router.get("/{user_id}/eventos/interesses", status_code=status.HTTP_200_OK, response_model=List[EventResponseSchema])
+def get_user_interested_events(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    return user.interested_events
+
+# Listar Eventos Criados pelo Usuário
+@router.get("/{user_id}/eventos/criados", status_code=status.HTTP_200_OK, response_model=List[EventResponseSchema])
+def get_user_created_events(user_id: int, session: Session = Depends(get_session)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    return user.events_created
