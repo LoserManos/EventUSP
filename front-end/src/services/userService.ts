@@ -1,5 +1,6 @@
 import { api } from './api'; 
 import { User, PaginatedUserResponse, UserUpdateDTO } from '../types/user';
+import { Organization } from '@/types/org';
 
 export const userService = {
   // Listar usuários com paginação e busca opcional (GET /usuarios/)
@@ -70,5 +71,29 @@ export const userService = {
   async getFollowing(userId: number | string): Promise<User[]> {
     const response = await api.get(`/usuarios/${userId}/seguindo`);
     return response.data;
-  }
+  },
+
+  // Listar quem o usuário segue (GET /usuarios/{user_id}/seguindo)
+  async getOrgs(userId: number | string): Promise<Organization[]> {
+    const response = await api.get(`/usuarios/${userId}/organizacoes`);
+    return response.data;
+  },
+  
+  // Listar eventos que o usuário curtiu
+  async getUserLikedEvents(userId: number | string): Promise<any[]> {
+    const response = await api.get(`/usuarios/${userId}/eventos/curtidos`);
+    return response.data;
+  },
+
+  // Listar eventos que o usuário tem interesse
+  async getUserInterestedEvents(userId: number | string): Promise<any[]> {
+    const response = await api.get(`/usuarios/${userId}/eventos/interesses`);
+    return response.data;
+  },
+
+  // Listar eventos criados pelo usuário
+  async getUserCreatedEvents(userId: number | string): Promise<any[]> {
+    const response = await api.get(`/usuarios/${userId}/eventos/criados`);
+    return response.data;
+  },
 };
