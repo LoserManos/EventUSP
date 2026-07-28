@@ -8,7 +8,7 @@ import { Organization } from '@/types/org';
 import { User } from '@/types/user';
 import { orgService } from '@/services/orgService';
 import { UserOverlayModal } from '@/components/UserOverlayModal';
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { getImageUrl } from '@/utils/image';
 
@@ -27,14 +27,20 @@ export default function OrgProfilePage() {
   const isOwner = org?.creator_id && currentLoggedUserId ? org.creator_id === currentLoggedUserId : false;
 
   const [membershipStatus, setMembershipStatus] = useState<'none' | 'pending' | 'member'>('none');
-  const [modalType, setModalType] = useState<'members' | 'edit' | null>(null);
+  const [modalType, setModalType] = useState<'members' | 'pending' | 'edit' | null>(null);
   
   const [membersList, setMembersList] = useState<User[]>([]);
   const [membersCount, setMembersCount] = useState(0);
 
+  const [pendingList, setPendingList] = useState<User[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+
+  // Verifica se o usuário logado é Administrador ou Dono
+  const [isAdminOrOwner, setIsAdminOrOwner] = useState(false);
 
   useEffect(() => {
     async function fetchOrgData() {
@@ -49,20 +55,31 @@ export default function OrgProfilePage() {
         setMembersList(members);
         setMembersCount(members.length);
 
-        // Utiliza a nova rota de membro para verificar a situação exata do usuário logado
         if (currentLoggedUserId) {
           try {
             const membershipInfo = await orgService.getMemberStatus(orgId, currentLoggedUserId);
             
             if (!membershipInfo) {
               setMembershipStatus('none');
-            } else if (membershipInfo.status === true) {
-              setMembershipStatus('member');
+              setIsAdminOrOwner(data.creator_id === currentLoggedUserId);
             } else {
-              setMembershipStatus('pending');
+              if (membershipInfo.status === true) {
+                setMembershipStatus('member');
+              } else {
+                setMembershipStatus('pending');
+              }
+              const adminOrOwner = (data.creator_id === currentLoggedUserId) || (membershipInfo.role === 'ADMIN');
+              setIsAdminOrOwner(adminOrOwner);
+
+              if (adminOrOwner) {
+                const pendings = await orgService.getPendingOrgMembers(orgId);
+                setPendingList(pendings);
+                setPendingCount(pendings.length);
+              }
             }
           } catch {
             setMembershipStatus('none');
+            setIsAdminOrOwner(data.creator_id === currentLoggedUserId);
           }
         }
       } catch (error) {
@@ -99,6 +116,22 @@ export default function OrgProfilePage() {
       orgService.joinOrg(Number(id)).then(() => {
         setMembershipStatus('pending');
       }).catch(err => console.error("Erro ao solicitar entrada:", err));
+    }
+  };
+
+  const handleAcceptMember = async (userId: number) => {
+    try {
+      await orgService.approveMember(Number(id), userId);
+      // Move o usuário da lista de pendentes para a lista de membros
+      const acceptedUser = pendingList.find(u => u.id === userId);
+      if (acceptedUser) {
+        setPendingList(prev => prev.filter(u => u.id !== userId));
+        setPendingCount(prev => prev - 1);
+        setMembersList(prev => [...prev, acceptedUser]);
+        setMembersCount(prev => prev + 1);
+      }
+    } catch (error: any) {
+      Alert.alert("Erro", error.response?.data?.detail || "Não foi possível aceitar o membro.");
     }
   };
 
@@ -184,6 +217,149 @@ export default function OrgProfilePage() {
     );
   }
 
+// Componente Genérico de Lista de Usuários Atualizado com Ações de Cargo
+  const renderUserListModalContent = (
+    users: any[], // Usamos any ou um tipo estendido caso traga dados da tabela intermédia
+    type: 'members' | 'pending'
+  ) => (
+    <FlatList
+      data={users}
+      keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
+      renderItem={({ item: userItem }) => {
+        const isItemOwner = userItem.id === org.creator_id;
+        const avatarUri = userItem.picture_profile ? getImageUrl(userItem.picture_profile) : null;
+        
+        // O cargo na organização pode vir direto no objeto se a API fizer o join, ex: userItem.role (da org) ou userItem.org_role
+        const currentOrgRole = userItem.role; 
+        const isCurrentlyAdmin = currentOrgRole === 'admin';
+
+        return (
+          <View style={styles.memberCardContainer}>
+            <TouchableOpacity 
+              style={styles.memberInfoWrapper} 
+              onPress={() => {
+                setModalType(null);
+                router.push(`/social/user/${userItem.id}`);
+              }}
+            >
+              <Image 
+                source={avatarUri ? { uri: avatarUri } : userPlaceholder} 
+                style={styles.memberAvatar} 
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.memberName} numberOfLines={1}>{userItem.name}</Text>
+                <Text style={styles.memberRoleTag}>
+                  {type === 'members' ? (isItemOwner ? 'Dono' : (isCurrentlyAdmin ? 'Administrador' : 'Membro')) : 'Solicitante'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Ações específicas para cada tipo de lista */}
+            {type === 'pending' && (
+              <TouchableOpacity 
+                style={styles.actionButtonPrimary}
+                onPress={() => userItem.id && handleAcceptMember(userItem.id)}
+              >
+                <Text style={styles.actionButtonText}>Aceitar</Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Botão de Transferir Posse (Apenas para o Dono atual para outros membros) */}
+            {type === 'members' && isOwner && !isItemOwner && (
+              <TouchableOpacity 
+                style={styles.iconButton}
+                onPress={() => {
+                  Alert.alert(
+                    "Transferir Posse",
+                    `Deseja transferir a propriedade da organização para ${userItem.name}? Você se tornará um administrador.`,
+                    [
+                      { text: "Cancelar", style: "cancel" },
+                      { 
+                        text: "Confirmar", 
+                        style: "destructive",
+                        onPress: async () => {
+                          try {
+                            await orgService.transferOwnership(Number(id), userItem.id!);
+                            
+                            // Atualiza o criador localmente ou recarrega a org
+                            setOrg(prev => prev ? { ...prev, creator_id: userItem.id! } : prev);
+                            setModalType(null);
+                            
+                            Alert.alert("Sucesso", "A posse da organização foi transferida com sucesso!");
+                          } catch (error: any) {
+                            Alert.alert("Erro", error.response?.data?.detail || "Não foi possível transferir a posse.");
+                          }
+                        } 
+                      }
+                    ]
+                  );
+                }}
+              >
+                <FontAwesome6 name="crown" size={18} color="#F59E0B" />
+              </TouchableOpacity>
+            )}
+
+            {/* Botão de Promover / Rebaixar Alternante */}
+            {type === 'members' && isAdminOrOwner && !isItemOwner && (
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <TouchableOpacity 
+                  style={[
+                    styles.actionButtonSecondary, 
+                    isCurrentlyAdmin && styles.actionButtonDemote
+                  ]}
+                  onPress={async () => {
+                    const actionName = isCurrentlyAdmin ? 'rebaixar para membro' : 'promover a administrador';
+
+                    Alert.alert(
+                      "Alterar Cargo",
+                      `Deseja ${actionName} o usuário ${userItem.name}?`,
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        { 
+                          text: "Confirmar", 
+                          onPress: async () => {
+                            try {
+                              if (isCurrentlyAdmin) {
+                                await orgService.DemoteMember(Number(id), userItem.id!);
+                              } else {
+                                await orgService.PromoteMember(Number(id), userItem.id!);
+                              }
+                              
+                              const newOrgRole = isCurrentlyAdmin ? 'member' : 'admin';
+                              
+                              // Atualiza o estado local da lista refletindo a mudança na hora com segurança de tipos
+                              setMembersList(prev => prev.map(u => 
+                                u.id === userItem.id ? { ...u, role: newOrgRole } : u
+                              ) as any);
+                              
+                              Alert.alert("Sucesso", "Cargo atualizado com sucesso!");
+                            } catch (error: any) {
+                              Alert.alert("Erro", error.response?.data?.detail || "Não foi possível alterar o cargo.");
+                            }
+                          } 
+                        }
+                      ]
+                    );
+                  }}
+                >
+                  <Text style={[
+                    styles.actionButtonSecondaryText,
+                    isCurrentlyAdmin && styles.actionButtonDemoteText
+                  ]}>
+                    {isCurrentlyAdmin ? 'Rebaixar' : 'Promover'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        );
+      }}
+      ListEmptyComponent={<Text style={styles.emptyModalText}>Nenhum registro encontrado.</Text>}
+      contentContainerStyle={{ paddingBottom: 20 }}
+      showsVerticalScrollIndicator={false}
+    />
+  );
+
   return (
     <View style={globalStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -261,6 +437,38 @@ export default function OrgProfilePage() {
           </TouchableOpacity>
         </View>
 
+        {/* Seção de Pedidos Pendentes (Apenas para Admins/Dono) */}
+        {isAdminOrOwner && (
+          <View style={styles.membersSectionContainer}>
+            <Text style={styles.membersSectionLabel}>
+              <Text style={styles.statBold}>{pendingCount}</Text> {pendingCount === 1 ? 'pedido pendente' : 'pedidos pendentes'}
+            </Text>
+
+            <TouchableOpacity style={styles.membersPreviewCard} onPress={() => setModalType('pending')} activeOpacity={0.85}>
+              <View style={styles.membersPreviewLeft}>
+                <Text style={styles.membersPreviewTitle}>Solicitações Pendentes</Text>
+                <Text style={styles.membersPreviewSub}>Toque para gerenciar pedidos</Text>
+              </View>
+
+              <View style={styles.membersPreviewRight}>
+                <View style={styles.avatarStack}>
+                  {pendingList.slice(0, 3).map((user, index) => {
+                    const avatarUri = user.picture_profile ? getImageUrl(user.picture_profile) : null;
+                    return (
+                      <Image 
+                        key={user.id?.toString() || index.toString()} 
+                        source={avatarUri ? { uri: avatarUri } : userPlaceholder} 
+                        style={[styles.stackedAvatar, { right: index * 14 }]} 
+                      />
+                    );
+                  })}
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.postsSection}>
           <Text style={styles.sectionTitle}>Eventos</Text>
           <View style={styles.postCardPlaceholder}>
@@ -272,40 +480,12 @@ export default function OrgProfilePage() {
 
       {/* Modal de Membros */}
       <UserOverlayModal visible={modalType === 'members'} onClose={() => setModalType(null)} title="Membros da Organização">
-        <FlatList
-          data={membersList}
-          keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
-          renderItem={({ item: member }) => {
-            const isMemberOwner = member.id === org.creator_id;
-            const avatarUri = member.picture_profile ? getImageUrl(member.picture_profile) : null;
+        {renderUserListModalContent(membersList, 'members')}
+      </UserOverlayModal>
 
-            return (
-              <View style={styles.memberCardContainer}>
-                <TouchableOpacity 
-                  style={styles.memberInfoWrapper} 
-                  onPress={() => {
-                    setModalType(null);
-                    router.push(`/social/user/${member.id}`);
-                  }}
-                >
-                  <Image 
-                    source={avatarUri ? { uri: avatarUri } : userPlaceholder} 
-                    style={styles.memberAvatar} 
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.memberName} numberOfLines={1}>{member.name}</Text>
-                    <Text style={styles.memberRoleTag}>
-                      {isMemberOwner ? 'Dono' : 'Membro'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            );
-          }}
-          ListEmptyComponent={<Text style={styles.emptyModalText}>Nenhum membro encontrado.</Text>}
-          contentContainerStyle={{ paddingBottom: 20 }}
-          showsVerticalScrollIndicator={false}
-        />
+      {/* Modal de Pedidos Pendentes */}
+      <UserOverlayModal visible={modalType === 'pending'} onClose={() => setModalType(null)} title="Solicitações Pendentes">
+        {renderUserListModalContent(pendingList, 'pending')}
       </UserOverlayModal>
 
       {/* Modal de Edição */}
@@ -376,6 +556,8 @@ const styles = StyleSheet.create({
   memberAvatar: { width: 40, height: 40, borderRadius: 20 },
   memberName: { color: colors.textPrimaryDark, fontWeight: 'bold', fontSize: 14 },
   memberRoleTag: { color: colors.orangePrimary, fontSize: 11 },
+  actionButtonPrimary: { backgroundColor: colors.orangePrimary, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6 },
+  actionButtonText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
   editForm: { gap: 12, paddingBottom: 10 },
   editPhotoContainer: { alignItems: 'center', marginBottom: 10 },
   editAvatarPreview: { width: 80, height: 80, borderRadius: 40, marginBottom: 8 },
@@ -385,5 +567,14 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.backgroundDarkSecondary, borderWidth: 1, borderColor: colors.backgroundDarkSecondary, borderRadius: 8, padding: 10, color: colors.textPrimaryDark, fontSize: 14 },
   textArea: { height: 80, textAlignVertical: 'top' },
   saveButton: { backgroundColor: colors.orangePrimary, padding: 12, borderRadius: 8, alignItems: 'center', marginTop: 8 },
-  saveButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 }
+  saveButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+  actionButtonSecondary: { backgroundColor: colors.backgroundDark, borderWidth: 1, borderColor: colors.orangePrimary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6 },
+  actionButtonSecondaryText: { color: colors.orangePrimary, fontSize: 11, fontWeight: 'bold' },
+  actionButtonDemote: { 
+    borderColor: '#EF4444', 
+    backgroundColor: 'transparent' 
+  },
+  actionButtonDemoteText: { 
+    color: '#EF4444' 
+  },
 });

@@ -1,6 +1,11 @@
 // src/services/orgService.ts
 import { api } from './api';
-import { Organization, OrganizationCreateDTO, OrganizationUpdateDTO, PaginatedOrgResponse, OrgMember } from '@/types/org';
+import { Organization, 
+         OrganizationCreateDTO, 
+         OrganizationUpdateDTO, 
+         PaginatedOrgResponse, 
+         OrgMember } from '@/types/org';
+import { User } from '@/types/user';
 
 export const orgService = {
   // Listar organizações (com paginação e busca opcional)
@@ -11,30 +16,9 @@ export const orgService = {
     return response.data;
   },
 
-  //// Obter detalhes de uma organização específica
-  //async getOrg(id: number): Promise<Organization> {
-  //  const response = await api.get(`/organizacoes/${id}`);
-  //  return response.data;
-  //},
-
   async getOrg(id: number): Promise<Organization> {
-    // Como não sabemos a página exata, buscamos a primeira página com um limite alto ou buscamos até achar
-    let page = 1;
-    let foundOrg: Organization | null = null;
-
-    while (page <= 5) { // Limite de segurança para evitar loops infinitos
-      const response = await this.listOrgs(page, 50, ''); // ou listOrgs(page, 50, '')
-      foundOrg = response.data.find((org: Organization) => org.id === id) || null;
-      
-      if (foundOrg || page >= response.total_pages) break;
-      page++;
-    }
-
-    if (!foundOrg) {
-      throw new Error("Organização não encontrada via listagem.");
-    }
-
-    return foundOrg;
+    const response = await api.get(`/organizacoes/${id}`);
+    return response.data;
   },
 
   // Criar Organização
@@ -73,6 +57,12 @@ export const orgService = {
     return response.data;
   },
 
+  // Aceitar solicitação de entrada de um membro (Admin) - Corrigido para /aceitar
+  async approveMember(orgId: number, userId: number): Promise<{ mensagem: string }> {
+    const response = await api.patch(`/organizacoes/${orgId}/membros/${userId}/aceitar`);
+    return response.data;
+  },
+
   // Sair da organização
   async leaveOrg(id: number): Promise<{ mensagem: string }> {
     const response = await api.delete(`/organizacoes/${id}/sair`);
@@ -94,9 +84,27 @@ export const orgService = {
     }
   },
 
-  // [Previsão] Aprovar solicitação de entrada de um membro (Admin)
-  async approveMember(orgId: number, userId: number): Promise<{ mensagem: string }> {
-    const response = await api.patch(`/organizacoes/${orgId}/membros/${userId}/aprovar`);
+  // Listar solicitações pendentes de entrada na organização (Admin)
+  async getPendingOrgMembers(id: number): Promise<User[]> {
+    const response = await api.get(`/organizacoes/${id}/membros/pendentes`);
+    return response.data;
+  },
+
+  // Promover membro da organização admin (Admin)
+  async PromoteMember(orgId: number, userId: number): Promise<{ mensagem: string }> {
+    const response = await api.patch(`/organizacoes/${orgId}/membros/${userId}/promover`);
+    return response.data;
+  },
+
+  // Rebaixar admin da organização a membro (Admin)
+    async DemoteMember(orgId: number, userId: number): Promise<{ mensagem: string }> {
+    const response = await api.patch(`/organizacoes/${orgId}/membros/${userId}/rebaixar`);
+    return response.data;
+  },
+
+  // Transferir a posse da organização (Apenas o Dono atual)
+  async transferOwnership(orgId: number, newOwnerId: number): Promise<{ mensagem: string }> {
+    const response = await api.patch(`/organizacoes/${orgId}/transferir-propriedade/${newOwnerId}`);
     return response.data;
   },
 };
