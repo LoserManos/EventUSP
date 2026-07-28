@@ -453,29 +453,6 @@ def list_organization_members(
     
     return membros
 
-# Obter a situação (status) de um usuário específico na organização
-@router.get("/{org_id}/membros/{user_id}", status_code=status.HTTP_200_OK, response_model=MemberOrganizationResponseSchema)
-def get_organization_member_status(
-    org_id: int, 
-    user_id: int,
-    current_user: User = Depends(get_actual_user),
-    session: Session = Depends(get_session)
-):
-    org = session.get(Organization, org_id)
-    if not org:
-        raise HTTPException(status_code=404, detail="Organização não encontrada.")
-
-    stmt = select(MemberOrganization).where(
-        MemberOrganization.user_id == user_id,
-        MemberOrganization.organization_id == org_id
-    )
-    membership = session.exec(stmt).first()
-
-    if not membership:
-        raise HTTPException(status_code=404, detail="Vínculo de membro não encontrado para este usuário.")
-
-    return membership
-
 # Listar Pedidos Pendentes de Entrada na Organização (Apenas ADMIN)
 @router.get("/{org_id}/membros/pendentes", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
 def list_pending_organization_members(
@@ -504,3 +481,26 @@ def list_pending_organization_members(
     membros_pendentes = session.exec(stmt).all()
     
     return membros_pendentes
+
+# Obter a situação (status) de um usuário específico na organização
+@router.get("/{org_id}/membros/{user_id}", status_code=status.HTTP_200_OK, response_model=MemberOrganizationResponseSchema)
+def get_organization_member_status(
+    org_id: int, 
+    user_id: int,
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+
+    stmt = select(MemberOrganization).where(
+        MemberOrganization.user_id == user_id,
+        MemberOrganization.organization_id == org_id
+    )
+    membership = session.exec(stmt).first()
+
+    if not membership:
+        raise HTTPException(status_code=404, detail="Vínculo de membro não encontrado para este usuário.")
+
+    return membership
