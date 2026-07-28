@@ -453,6 +453,35 @@ def list_organization_members(
     
     return membros
 
+# Listar Pedidos Pendentes de Entrada na Organização (Apenas ADMIN)
+@router.get("/{org_id}/membros/pendentes", status_code=status.HTTP_200_OK, response_model=List[UserResponseSchema])
+def list_pending_organization_members(
+    org_id: int, 
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+):
+    org = session.get(Organization, org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organização não encontrada.")
+    
+    # Verifica se quem está listando é ADMIN da organização
+    requester_membership = session.exec(select(MemberOrganization).where(
+        MemberOrganization.user_id == current_user.id,
+        MemberOrganization.organization_id == org_id
+    )).first()
+
+    if not requester_membership or requester_membership.role != OrgRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem visualizar os pedidos pendentes.")
+
+    # Busca apenas os usuários que possuem vínculo com status == False (pendente)
+    stmt = select(User).join(MemberOrganization).where(
+        MemberOrganization.organization_id == org_id,
+        MemberOrganization.status == False
+    )
+    membros_pendentes = session.exec(stmt).all()
+    
+    return membros_pendentes
+
 # Obter a situação (status) de um usuário específico na organização
 @router.get("/{org_id}/membros/{user_id}", status_code=status.HTTP_200_OK, response_model=MemberOrganizationResponseSchema)
 def get_organization_member_status(
