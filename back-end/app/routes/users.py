@@ -6,7 +6,7 @@ from typing import Optional
 from app.database import get_session
 from app.models import User, Follower, Organization, MemberOrganization
 from app.security import get_actual_user 
-from app.schemas import UserUpdateSchema, UserResponseSchema, PaginatedUserResponse, OrganizationResponseSchema
+from app.schemas import UserUpdateSchema, UserResponseSchema, PaginatedUserResponse, OrganizationResponseSchema, EventResponseSchema
 from typing import List
 
 router = APIRouter(
