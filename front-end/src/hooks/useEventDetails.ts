@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { eventsService } from '../services/eventService';
+import { userService } from '../services/userService';
 import { Event } from '../types/event';
 import { User } from '../types/user';
 import { Comment } from '../types/comment';
@@ -9,6 +10,7 @@ export function useEventDetails(id: number | string | undefined) {
   const [likers, setLikers] = useState<User[]>([]);
   const [interested, setInterested] = useState<User[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [author, setAuthor] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,22 +20,25 @@ export function useEventDetails(id: number | string | undefined) {
       setLoading(true);
       try {
         const eventId = Number(id);
+        const eventData = await eventsService.getEventById(eventId);
+
         const [
-          eventData,
           likersData,
           interestedData,
-          commentsData
+          commentsData,
+          authorData
         ] = await Promise.all([
-          eventsService.getEventById(eventId),
           eventsService.getEventLikes(eventId),
           eventsService.getEventInterests(eventId),
-          eventsService.getEventComments(eventId)
+          eventsService.getEventComments(eventId),
+          userService.getUser(eventData.user_id)
         ]);
         
         setEvent(eventData);
         setLikers(likersData);
         setInterested(interestedData);
         setComments(commentsData);
+        setAuthor(authorData);
       } catch (error) {
         console.error("Erro no useEventDetails:", error);
       } finally {
@@ -74,14 +79,51 @@ export function useEventDetails(id: number | string | undefined) {
     }
   };
 
+  const deleteEvent = async () => {
+    if (!id) return;
+    try {
+      await eventsService.deleteEvent(Number(id));
+    } catch (error) {
+      console.error("Erro ao excluir evento:", error);
+      throw error;
+    }
+  };
+
+  const updateEvent = async (data: Partial<any>) => {
+    if (!id) return;
+    try {
+      const updatedEvent = await eventsService.updateEvent(Number(id), data);
+      setEvent(updatedEvent);
+    } catch (error) {
+      console.error("Erro ao atualizar evento:", error);
+      throw error;
+    }
+  };
+
+  const uploadImage = async (formData: any) => {
+    if (!id) return;
+    try {
+      await eventsService.uploadEventImage(Number(id), formData);
+      const updatedEvent = await eventsService.getEventById(Number(id));
+      setEvent(updatedEvent);
+    } catch (error) {
+      console.error("Erro ao fazer upload da imagem:", error);
+      throw error;
+    }
+  };
+
   return {
     event,
     likers,
     interested,
     comments,
+    author,
     loading,
     toggleInterest,
     toggleLike,
-    addComment
+    addComment,
+    deleteEvent,
+    updateEvent,
+    uploadImage
   };
 }

@@ -87,6 +87,20 @@ export const eventsService = {
   async addComment(id: number, content: string): Promise<{ mensagem: string }> {
     const response = await api.post(`/eventos/${id}/comentarios`, { content });
     return response.data;
+  },
+
+  async deleteEvent(id: number): Promise<void> {
+    await api.delete(`/eventos/${id}`);
+  },
+
+  async updateEvent(id: number, data: Partial<any>): Promise<Event> {
+    const response = await api.patch(`/eventos/${id}`, data);
+    return response.data;
+  },
+
+  async uploadEventImage(id: number, formData: any): Promise<any> {
+    const response = await api.post(`/eventos/${id}/fotos`, formData);
+    return response.data;
   }
 };
 

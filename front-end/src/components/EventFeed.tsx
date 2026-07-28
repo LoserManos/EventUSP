@@ -4,6 +4,7 @@ import { EventCard } from '@/components/EventCard';
 import { colors } from '@/styles/global'
 import { EventFilters } from '@/services/eventService'
 import { useEventsFeed } from '@/hooks/useEventsFeed'
+import { getImageUrl } from '@/utils/image'
 
 interface EventFeedProps {
   filtrosAtivos: EventFilters;
@@ -43,6 +44,7 @@ export default function EventFeed({ filtrosAtivos }: EventFeedProps) {
               dates={formattedDate}
               time={formattedTime}
               free={true} // Placeholder temporário
+              image={item.banner ? { uri: getImageUrl(item.banner)! } : undefined}
             />
           );
         }}
