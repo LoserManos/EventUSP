@@ -6,7 +6,7 @@ import shutil
 from app.database import get_session
 from app.models import User, Organization, MemberOrganization, OrgRole
 from app.security import get_actual_user
-from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema, OrganizationResponseSchema, PaginatedOrganizationResponse, UserResponseSchema
+from app.schemas import OrganizationCreateSchema, OrganizationUpdateSchema, OrganizationResponseSchema, PaginatedOrganizationResponse, UserResponseSchema, MemberOrganizationResponseSchema
 from typing import List, Optional
 
 router = APIRouter(
