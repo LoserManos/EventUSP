@@ -13,6 +13,17 @@ export interface EventCreateData {
   organization_id?: number | null;
 }
 
+const CATEGORY_MAP: Record<string, number> = {
+  party: 1,
+  sport: 2,
+  workshop: 3,
+  lecture: 4,
+  congress: 5,
+  social: 6,
+  religion: 7,
+  academic: 8
+};
+
 export const eventsService = {
   async createEvent(eventData: EventCreateData) {
     try {
@@ -33,7 +44,9 @@ export const eventsService = {
   ): Promise<PaginatedResponse> {
     const params: any = { pagina, limite };
     if (filtros?.busca) params.busca = filtros.busca;
-    if (filtros?.categoria) params.category_id = Number(filtros.categoria);
+    if (filtros?.categoria && CATEGORY_MAP[filtros.categoria]) {
+      params.category_id = CATEGORY_MAP[filtros.categoria];
+    }
     if (filtros?.sortBy === 'likes') params.most_likes = true;
     else if (filtros?.sortBy === 'date_desc') params.most_recent = true;
 
@@ -80,12 +93,6 @@ export const eventsService = {
 export interface EventFilters {
   busca?: string;
   categoria?: string | null;
-  orgName?: string;
-  creatorName?: string;
-  dateAfter?: string;
-  dateBefore?: string;
-  timeAfter?: string;
-  timeBefore?: string;
   sortBy?: 'date_asc' | 'date_desc' | 'likes';
 }
 

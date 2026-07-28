@@ -3,9 +3,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { EventFilters } from '@/services/eventService';
 
-// Espelho do enum CategoryType do models.py
 const CATEGORY_TYPES = [
-  "party", "sport", "workshop", "lecture", 
+  "todos", "party", "sport", "workshop", "lecture", 
   "congress", "social", "religion", "academic"
 ];
 
@@ -16,17 +15,7 @@ interface FilterPanelProps {
 
 export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPanelProps) {
   // Estados para capturar os inputs do usuário
-  const [selectedCategory, setSelectedCategory] = useState(currentFilters.categoria);
-  const [orgName, setOrgName] = useState('');
-  const [creatorName, setCreatorName] = useState('');
-
- // Estados para intervalos de Data
-  const [dateAfter, setDateAfter] = useState('');
-  const [dateBefore, setDateBefore] = useState('');
-  
-  // Estados para intervalos de Horário
-  const [timeAfter, setTimeAfter] = useState('');
-  const [timeBefore, setTimeBefore] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(currentFilters.categoria || "todos");
 
   // Estado para Ordenação
   const [sortBy, setSortBy] = useState<'date_asc' | 'date_desc' | 'likes'>('date_asc');
@@ -43,7 +32,7 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
             <Pressable
               key={cat}
               style={[styles.pill, selectedCategory === cat && styles.pillActive]}
-              onPress={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+              onPress={() => setSelectedCategory(cat)}
             >
               <Text style={[styles.pillText, selectedCategory === cat && styles.pillTextActive]}>
                 {cat.toUpperCase()}
@@ -51,87 +40,6 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
             </Pressable>
           ))}
         </ScrollView>
-      </View>
-
-      {/* --- ORGANIZAÇÃO E USUÁRIO --- */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Organização (Nome)</Text>
-        <TextInput
-          style={styles.input}
-          placeholderTextColor={colors.textSecondary}
-          placeholder="Ex: ECA Jr. ..."
-          value={orgName}
-          onChangeText={setOrgName}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.label}>Criador do Evento</Text>
-        <TextInput
-          style={styles.input}
-          placeholderTextColor={colors.textSecondary}
-          placeholder="Ex: Lucas Antonio..."
-          value={creatorName}
-          onChangeText={setCreatorName}
-        />
-      </View>
-
-      {/* --- DATA --- */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Data do Evento</Text>
-        <View style={styles.rowInputGroup}>
-          <Text style={styles.sideLabel}>Depois de:</Text>
-          <TextInput
-            style={styles.sideInput}
-            placeholderTextColor={colors.textSecondary}
-            placeholder="DD/MM/AA"
-            value={dateAfter}
-            onChangeText={setDateAfter}
-            keyboardType="numeric"
-            maxLength={8}
-          />
-        </View>
-        <View style={styles.rowInputGroup}>
-          <Text style={styles.sideLabel}>Antes de:</Text>
-          <TextInput
-            style={styles.sideInput}
-            placeholderTextColor={colors.textSecondary}
-            placeholder="DD/MM/AA"
-            value={dateBefore}
-            onChangeText={setDateBefore}
-            keyboardType="numeric"
-            maxLength={8}
-          />
-        </View>
-      </View>
-
-      {/* --- HORÁRIO --- */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Horário</Text>
-        <View style={styles.rowInputGroup}>
-          <Text style={styles.sideLabel}>Depois das:</Text>
-          <TextInput
-            style={styles.sideInput}
-            placeholderTextColor={colors.textSecondary}
-            placeholder="HH:MM"
-            value={timeAfter}
-            onChangeText={setTimeAfter}
-            keyboardType="numeric"
-            maxLength={5}
-          />
-        </View>
-        <View style={styles.rowInputGroup}>
-          <Text style={styles.sideLabel}>Antes das:</Text>
-          <TextInput
-            style={styles.sideInput}
-            placeholderTextColor={colors.textSecondary}
-            placeholder="HH:MM"
-            value={timeBefore}
-            onChangeText={setTimeBefore}
-            keyboardType="numeric"
-            maxLength={5}
-          />
-        </View>
       </View>
 
       {/* --- ORDENAÇÃO --- */}
@@ -163,13 +71,7 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
         style={styles.applyButton}
         onPress={() => {
           onApplyFilters({
-            categoria: selectedCategory,
-            orgName,
-            creatorName,
-            dateAfter,
-            dateBefore,
-            timeAfter,
-            timeBefore,
+            categoria: selectedCategory === "todos" ? null : selectedCategory,
             sortBy
           });
         }}
@@ -216,8 +118,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   pillActive: {
-    backgroundColor: colors.orangeSecondary,
-  },
+    backgroundColor: `${colors.orangePrimary}25`, 
+ },
   pillText: {
     fontSize: 14,
     color: colors.textSecondary,
@@ -264,7 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sortBtnActive: {
-    backgroundColor: colors.orangeSecondary,
+    backgroundColor: `${colors.orangePrimary}25`, 
   },
   sortTextSmall: {
     fontSize: 12, // Texto menor
@@ -278,7 +180,7 @@ const styles = StyleSheet.create({
 
   // Botão Final
   applyButton: {
-    backgroundColor: colors.blueSecondary,
+    backgroundColor: `${colors.bluePrimary}25`,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

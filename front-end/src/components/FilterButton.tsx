@@ -17,7 +17,7 @@ export default function FilterButton({ onPress, isActive }: FilterButtonProps) {
       <Feather 
         name="sliders" 
         size={20} 
-        color={isActive ? colors.orangePrimary : colors.orangeSecondary} 
+        color={colors.orangePrimary} 
       />
     </Pressable>
   );
@@ -33,6 +33,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterButtonActive: {
-    backgroundColor: colors.orangeSecondary,
+    backgroundColor: `${colors.orangePrimary}25`,
   }
 });
