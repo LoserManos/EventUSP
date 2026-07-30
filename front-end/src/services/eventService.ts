@@ -13,6 +13,11 @@ export interface EventCreateData {
   organization_id?: number | null;
 }
 
+export interface Category {
+  id: number;
+  type: string;
+}
+
 const CATEGORY_MAP: Record<string, number> = {
   party: 1,
   sport: 2,
@@ -35,6 +40,11 @@ export const eventsService = {
       console.error('Erro ao criar evento:', error);
       throw error;
     }
+  },
+
+  async getCategories(): Promise<Category[]> {
+    const response = await api.get('/eventos/categorias');
+    return response.data;
   },
 
   async getEvents(

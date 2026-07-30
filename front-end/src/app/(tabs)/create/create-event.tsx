@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,84 +9,115 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/styles/global';
 import { useRouter } from 'expo-router';
 import { useCreateEvent } from '@/hooks/useCreateEvent';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { eventsService, Category } from '@/services/eventService';
+import { colors } from '@/styles/global';
+
+const ACCENT = colors.orangePrimary;
+const ACCENT_DARK = colors.orangePrimary;
+const BG_COLOR = colors.backgroundDark;
+const TEXT_MAIN = colors.textPrimaryDark;
+const TEXT_MUTED = colors.textSecondary;
+const INPUT_BG = colors.backgroundDarkSecondary;
+
+const CATEGORY_TRANSLATIONS: Record<string, string> = {
+  party: 'Festa',
+  sport: 'Esporte',
+  workshop: 'Oficina',
+  lecture: 'Palestra',
+  congress: 'Congresso',
+  social: 'Social',
+  religion: 'Religião',
+  academic: 'Acadêmico'
+};
+
+function Field({ label, icon, children }: { label: string; icon?: keyof typeof Ionicons.glyphMap; children: React.ReactNode }) {
+  return (
+    <View style={styles.fieldContainer}>
+      <View style={styles.labelRow}>
+        {icon && <Ionicons name={icon} size={14} color={ACCENT_DARK} />}
+        <Text style={styles.label}>{label}</Text>
+      </View>
+      {children}
+    </View>
+  );
+}
 
 export default function CreateEventScreen() {
   const router = useRouter();
 
-  // Estados para os campos do formulário
   const [title, setTitle] = useState('');
-  const [local, setLocal] = useState('');
   const [duration, setDuration] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<number | null>(null);
+  const [local, setLocal] = useState('');
+  const [description, setDescription] = useState('');
+  const [free, setFree] = useState(true);
 
-  // Estados do DateTimePicker
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    eventsService.getCategories()
+      .then((data) => {
+        setCategories(data);
+        if (data.length > 0) {
+          setCategory(data[0].id);
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar categorias:", err))
+      .finally(() => setLoadingCategories(false));
+  }, []);
+
+  // Date/Time
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<any>(Platform.OS === 'ios' ? 'datetime' : 'date');
 
   const { createEvent, loading, error } = useCreateEvent();
 
+  const canPublish = title.trim().length > 0 && local.trim().length > 0 && duration.trim().length > 0 && category !== null;
+
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       if (event.type === 'set' && selectedDate) {
         setDate(selectedDate);
         if (pickerMode === 'date') {
-          // Após escolher a data no Android, abre o seletor de Hora
           setPickerMode('time');
         } else {
-          // Terminou de escolher a hora
           setShowPicker(false);
-          setPickerMode('date'); // Reseta para a próxima vez
+          setPickerMode('date');
         }
       } else {
-        // Usuário cancelou
         setShowPicker(false);
         setPickerMode('date');
       }
     } else {
-      // iOS atualiza em tempo real
-      if (selectedDate) {
-        setDate(selectedDate);
-      }
+      if (selectedDate) setDate(selectedDate);
     }
   };
 
-  const handleCreateEvent = async () => {
-    if (!title || !local || !duration || !category) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-      return;
-    }
+  const handlePublish = async () => {
+    if (!canPublish) return;
 
     try {
-      const isoDateString = date.toISOString();
-
       const eventoParaEnviar = {
         title,
         local,
-        start_date: isoDateString,
-        duration: Number(duration),
-        category_id: Number(category),
+        start_date: date.toISOString(),
+        duration: Number(duration) || 120, // default if empty/invalid
+        category_id: category!,
       };
 
       await createEvent(eventoParaEnviar);
       
-      Alert.alert('Sucesso', 'Evento criado com sucesso!');
-      
-      setTitle('');
-      setLocal('');
-      setDate(new Date());
-      setDuration('');
-      setCategory('');
-      
+      Alert.alert('Sucesso', 'Evento publicado com sucesso!');
       router.push('/(tabs)');
     } catch (err) {
       console.log('Falha ao criar evento');
@@ -94,160 +125,201 @@ export default function CreateEventScreen() {
   };
 
   const formatDisplayDate = (d: Date) => {
-    return d.toLocaleString('pt-BR', { 
-      day: '2-digit', month: '2-digit', year: 'numeric', 
-      hour: '2-digit', minute: '2-digit' 
-    });
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+  
+  const formatDisplayTime = (d: Date) => {
+    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.safeArea}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+
+
         <ScrollView
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Cabeçalho */}
-          <View style={styles.header}>
+          {/* Cabeçalho Original */}
+          <View style={styles.pageHeader}>
             <Text style={styles.titulo}>Criar Evento</Text>
             <Text style={styles.subtitulo}>
               Preencha os dados abaixo para divulgar seu novo evento.
             </Text>
           </View>
-          
-          {/* Nome do Evento */}
-          <Text style={styles.label}>Nome do Evento</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="text-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Festa da Computação"
-              placeholderTextColor={colors.textSecondary}
-              value={title}
-              onChangeText={setTitle}
-            />
+
+          <View style={styles.formContent}>
+
+            {/* Cover uploader */}
+            {/* <TouchableOpacity style={styles.coverUploader} activeOpacity={0.9}>
+              <View style={styles.coverIconCircle}>
+                <Ionicons name="images-outline" size={20} color={ACCENT_DARK} />
+              </View>
+              <Text style={styles.coverText}>Adicionar foto de capa</Text>
+              <Text style={styles.coverSubtext}>Recomendado 1200 × 600</Text>
+            </TouchableOpacity> */}
+
+            <Field label="Nome do evento" icon="text-outline">
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: Sexta do Rock"
+                placeholderTextColor={TEXT_MUTED}
+                value={title}
+                onChangeText={setTitle}
+              />
+            </Field>
+
+            <Field label="Duração (minutos)" icon="time-outline">
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: 120"
+                placeholderTextColor={TEXT_MUTED}
+                value={duration}
+                onChangeText={setDuration}
+                keyboardType="numeric"
+              />
+            </Field>
+
+            {/* Category */}
+            <Field label="Categoria">
+              <View style={styles.categoriesWrapper}>
+                {loadingCategories ? (
+                  <ActivityIndicator color={ACCENT_DARK} size="small" style={{ marginVertical: 8 }} />
+                ) : (
+                  categories.map((c) => {
+                    const active = c.id === category;
+                    const label = CATEGORY_TRANSLATIONS[c.type] || c.type;
+                    return (
+                      <TouchableOpacity
+                        key={c.id}
+                        onPress={() => setCategory(c.id)}
+                        style={[styles.categoryChip, { backgroundColor: active ? ACCENT : INPUT_BG }]}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.categoryChipText, { color: active ? colors.backgroundDark : TEXT_MUTED }]}>
+                          {label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </View>
+            </Field>
+
+            {/* Date + Time */}
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <Field label="Data" icon="calendar-outline">
+                  <TouchableOpacity 
+                    style={[styles.input, { justifyContent: 'center' }]} 
+                    onPress={() => {
+                      setPickerMode('date');
+                      setShowPicker(true);
+                    }}
+                  >
+                    <Text style={{ color: TEXT_MAIN }}>{formatDisplayDate(date)}</Text>
+                  </TouchableOpacity>
+                </Field>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Field label="Horário" icon="time-outline">
+                  <TouchableOpacity 
+                    style={[styles.input, { justifyContent: 'center' }]} 
+                    onPress={() => {
+                      setPickerMode('time');
+                      setShowPicker(true);
+                    }}
+                  >
+                    <Text style={{ color: TEXT_MAIN }}>{formatDisplayTime(date)}</Text>
+                  </TouchableOpacity>
+                </Field>
+              </View>
+            </View>
+
+            {showPicker && (
+              <DateTimePicker
+                value={date}
+                mode={pickerMode}
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+              />
+            )}
+
+            <Field label="Local" icon="location-outline">
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: Vala da FAUD-USP"
+                placeholderTextColor={TEXT_MUTED}
+                value={local}
+                onChangeText={setLocal}
+              />
+            </Field>
+
+            <Field label="Descrição">
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Conte mais sobre o seu evento..."
+                placeholderTextColor={TEXT_MUTED}
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </Field>
+
+            {/* Free toggle */}
+            <View style={styles.freeToggleWrapper}>
+              <View>
+                <Text style={styles.freeTitle}>Evento gratuito</Text>
+                <Text style={styles.freeSubtext}>Sem custo de entrada</Text>
+              </View>
+              <Switch
+                value={free}
+                onValueChange={setFree}
+                trackColor={{ false: '#d1d5db', true: ACCENT }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor="#d1d5db"
+              />
+            </View>
+
+            {error && <Text style={styles.errorText}>{error}</Text>}
           </View>
-
-          {/* Local */}
-          <Text style={styles.label}>Local</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Pátio Principal"
-              placeholderTextColor={colors.textSecondary}
-              value={local}
-              onChangeText={setLocal}
-            />
-          </View>
-
-          {/* Data e Hora (Botão Picker Nativo) */}
-          <Text style={styles.label}>Data e Hora</Text>
-          <TouchableOpacity 
-            style={styles.inputWrapper} 
-            onPress={() => {
-              setPickerMode(Platform.OS === 'ios' ? 'datetime' : 'date');
-              setShowPicker(true);
-            }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <Text style={styles.input}>
-              {formatDisplayDate(date)}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Renderização do Calendário */}
-          {showPicker && (
-            <DateTimePicker
-              value={date}
-              mode={pickerMode}
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={handleDateChange}
-              textColor={colors.textPrimaryDark}
-            />
-          )}
-
-          {/* Duração */}
-          <Text style={styles.label}>Duração (em minutos)</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="time-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: 120"
-              placeholderTextColor={colors.textSecondary}
-              value={duration}
-              onChangeText={setDuration}
-              keyboardType="numeric"
-            />
-          </View>
-          
-          {/* Categoria (Estrutura provisória) */}
-          <Text style={styles.label}>ID da Categoria</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="pricetag-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: 1 (Festa), 2 (Esporte)..."
-              placeholderTextColor={colors.textSecondary}
-              value={category}
-              onChangeText={setCategory}
-              keyboardType="numeric"
-            />
-          </View>
-
-          {/* Mensagem de Erro (se houver) */}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-
-          {/* Botão de Criar */}
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={handleCreateEvent}
-            activeOpacity={0.85}
-            disabled={loading}
-          >
-            <LinearGradient
-              colors={[colors.orangePrimary, colors.orangePrimary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.backgroundDark} />
-              ) : (
-                <Text style={styles.createButtonText}>Publicar Evento</Text>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
         </ScrollView>
+
+        {/* Sticky publish */}
+        <View style={styles.stickyFooter}>
+          <TouchableOpacity
+            style={[styles.publishButton, (!canPublish || loading) && styles.publishButtonDisabled]}
+            onPress={handlePublish}
+            disabled={!canPublish || loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.backgroundDark} />
+            ) : (
+              <Text style={styles.publishButtonText}>Publicar evento</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.backgroundDark,
+    backgroundColor: BG_COLOR,
   },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  header: {
+  pageHeader: {
     marginBottom: 32,
+    marginTop: 4,
   },
   titulo: {
     fontSize: 34,
@@ -260,48 +332,145 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 21,
   },
-  label: {
-    fontSize: 14,
-    color: colors.textPrimaryDark,
-    marginBottom: 8,
-    marginLeft: 4,
-    fontWeight: '600',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.backgroundDarkSecondary,
-    borderRadius: 16,
+  container: {
     paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 20,
+    paddingBottom: 24,
   },
-  inputIcon: {
-    marginRight: 10,
+  formContent: {
+    gap: 16,
+    paddingTop: 4,
   },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textPrimaryDark,
-  },
-  createButton: {
+  coverUploader: {
+    height: 160,
+    width: '100%',
     borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: colors.orangePrimary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  gradient: {
-    height: 56,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: ACCENT,
+    backgroundColor: `${ACCENT}12`,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
-  createButtonText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
+  coverIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${ACCENT}30`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  coverText: {
     fontWeight: 'bold',
+    fontSize: 13,
+    color: ACCENT_DARK,
+  },
+  coverSubtext: {
+    fontSize: 11,
+    color: TEXT_MUTED,
+    marginTop: 4,
+  },
+  fieldContainer: {
+    gap: 6,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  label: {
+    fontWeight: '700',
+    fontSize: 13,
+    color: TEXT_MAIN,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: INPUT_BG,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: TEXT_MAIN,
+    minHeight: 48,
+  },
+  textArea: {
+    height: 100,
+    paddingTop: 12,
+  },
+  categoriesWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  categoryChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  categoryChipText: {
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  freeToggleWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: INPUT_BG,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: INPUT_BG,
+    marginTop: 8,
+  },
+  freeTitle: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: TEXT_MAIN,
+  },
+  freeSubtext: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    marginTop: 2,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  stickyFooter: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: BG_COLOR,
+    borderTopWidth: 1,
+    borderTopColor: INPUT_BG,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  publishButton: {
+    width: '100%',
+    backgroundColor: ACCENT,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  publishButtonDisabled: {
+    opacity: 0.4,
+  },
+  publishButtonText: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: colors.backgroundDark,
   },
 });

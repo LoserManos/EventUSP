@@ -22,11 +22,11 @@ export default function CreateLayout() {
       />
       <Stack.Screen 
         name="create-event" 
-        options={{ title: 'Criar Evento' }} 
+        options={{ title: 'Criar Evento', headerTitle: '' }} 
       />
       <Stack.Screen 
         name="create-org" 
-        options={{ title: 'Criar Organização' }} 
+        options={{ title: 'Criar Organização', headerTitle: '' }} 
       />
     </Stack>
   );
