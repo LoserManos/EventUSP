@@ -85,7 +85,9 @@ export function EventCard({
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={handlePress}>
       <View style={styles.content}>
-        <Image source={actualImage} style={styles.image} resizeMode="cover" />
+        <View style={styles.imageContainer}>
+          <Image source={actualImage} style={styles.image} resizeMode="cover" />
+        </View>
 
         <View style={styles.info}>
           <View style={styles.headerRow}>
@@ -141,12 +143,20 @@ const styles = StyleSheet.create({
   },
   content: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 20,
   },
+  imageContainer: {
+    width: 120,
+    height: 120,
+    flexShrink: 0,
+    borderRadius: 12,
+    overflow: "hidden",
+    backgroundColor: colors.backgroundDarkSecondary,
+  },
   image: {
-    width: 92,
-    height: 92,
+    width: "100%",
+    height: "100%",
     borderRadius: 12,
   },
   info: {
