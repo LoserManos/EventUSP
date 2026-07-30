@@ -12,7 +12,7 @@ export default function SocialPage() {
 
   return (
     <View style={globalStyles.container}>
-      <View style={globalStyles.header}>
+      <View style={[globalStyles.header, {marginTop: 20}]}>
         <SearchBar 
           value={searchQuery} 
           onChangeText={setSearchQuery} 

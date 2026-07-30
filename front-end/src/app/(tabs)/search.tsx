@@ -15,7 +15,7 @@ export default function SearchPage() {
 
   return (
     <View style={globalStyles.container}>
-      <View style={globalStyles.header}>
+      <View style={[globalStyles.header, {marginTop: 20}]}>
         <SearchBar 
           value={activeFilters.busca || ''} 
           onChangeText={(texto) => setActiveFilters({ ...activeFilters, busca: texto })}

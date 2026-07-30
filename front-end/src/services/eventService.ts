@@ -84,6 +84,11 @@ export const eventsService = {
     return response.data;
   },
 
+  async getFollowingEvents(pagina: number = 1, limite: number = 20): Promise<PaginatedResponse> {
+    const response = await api.get('/eventos/seguindo', { params: { pagina, limite } });
+    return response.data;
+  },
+
   async addComment(id: number, content: string): Promise<{ mensagem: string }> {
     const response = await api.post(`/eventos/${id}/comentarios`, { content });
     return response.data;

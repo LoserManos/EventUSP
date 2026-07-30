@@ -41,8 +41,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingBottom: 20,
+    paddingTop: 20,
+    paddingBottom: 8
   },
   title: {
     fontSize: 35,
