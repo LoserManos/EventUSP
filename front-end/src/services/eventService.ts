@@ -64,6 +64,14 @@ export const eventsService = {
     return response.data;
   },
 
+  async getFollowingEvents(
+    pagina: number = 1,
+    limite: number = 20
+  ): Promise<PaginatedResponse> {
+    const response = await api.get('/eventos/seguindo', { params: { pagina, limite } });
+    return response.data;
+  },
+
   async getEventById(id: number): Promise<Event> {
     const response = await api.get(`/eventos/${id}`);
     return response.data;

@@ -13,15 +13,16 @@ import {
 } from 'react-native';
 import { EventCard } from '@/components/EventCard';
 import { SocialPost } from '@/components/SocialPost';
+import { useFollowingEventsFeed } from '@/hooks/useFollowingEventsFeed';
+import { ActivityIndicator, TouchableOpacity } from 'react-native';
 
 const images = [
-  require('../../../assets/images/Card.png'),
-  require('../../../assets/images/card2.jpg'),
   require('../../../assets/images/card3.jpg'),
+  require('../../../assets/images/Card.png'),
 ];
 
 // Legenda exibida sobre cada slide (deixe vazio '' para slides sem legenda)
-const captions = ['', '', 'Viva a USP'];
+const captions = ['Viva a USP', ''];
 
 const minhaFoto = require('../../../assets/images/Event.png');
 
@@ -30,6 +31,11 @@ export default function HomeScreen() {
   const imageWidth = width - 40;
   const imageHeight = 200;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showAllEvents, setShowAllEvents] = useState(false);
+
+  const { data: followingEvents, loading } = useFollowingEventsFeed(20);
+
+  const displayedEvents = showAllEvents ? followingEvents : followingEvents.slice(0, 2);
 
   const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / imageWidth);
@@ -88,39 +94,32 @@ export default function HomeScreen() {
 
       {/* Eventos em destaque */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Eventos em destaque</Text>
-        <Text style={styles.sectionLink}>Ver todos</Text>
+        <Text style={styles.sectionTitle}>Eventos de interesse</Text>
+        {followingEvents.length > 0 && (
+          <TouchableOpacity onPress={() => setShowAllEvents(!showAllEvents)}>
+            <Text style={styles.sectionLink}>{showAllEvents ? 'Ver menos' : 'Ver todos'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-      <EventCard />
+      {displayedEvents.length > 0 ? (
+        displayedEvents.map(event => (
+          <EventCard key={`featured-${event.id}`} event={event} />
+        ))
+      ) : (
+        !loading && (
+          <View style={{ alignItems: 'center', padding: 20 }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: 'Montserrat_400Regular' }}>
+              Nenhum evento encontrado de quem você segue.
+            </Text>
+          </View>
+        )
+      )}
 
-      <EventCard
-        title="Rock na Vala"
-        organizer="FAUD-USP"
-        location="Vala da FAUD-USP"
-        dates="12/08"
-        time="18:00 - 23:00"
-        free={false}
-        image={minhaFoto}
-      />
+      {loading && (
+        <ActivityIndicator size="small" color={colors.orangePrimary} style={{ marginVertical: 12 }} />
+      )}
 
-      {/* Feed de amigos */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Feed de amigos</Text>
-        <Text style={styles.sectionLink}>Explorar</Text>
-      </View>
-
-      <SocialPost />
-
-      {/* ou customizado: */}
-      <SocialPost
-        username="Lucar Aura"
-        handle="@TheMostAura"
-        timeAgo="5h"
-        eventName="Junime"
-        likes={34}
-        comments={8}
-      />
     </ScrollView>
   );
 }
@@ -147,7 +146,7 @@ const styles = StyleSheet.create({
   captionWrapper: {
     position: 'absolute',
     left: 16,
-    bottom: 16,
+    bottom: 4,
   },
   captionText: {
     fontSize: 20,
@@ -158,22 +157,24 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   dotsWrapper: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
+    justifyContent: 'flex-end',
   },
   dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginHorizontal: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   dotActive: {
-    backgroundColor: colors.bluePrimary,
-    width: 16,
+    backgroundColor: colors.orangePrimary,
+    width: 20,
   },
   dotInactive: {
-    backgroundColor: colors.backgroundDarkSecondary,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   sectionHeader: {
     flexDirection: 'row',
