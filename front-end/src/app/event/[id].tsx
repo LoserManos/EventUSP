@@ -135,27 +135,7 @@ export default function EventDetailsScreen() {
 
   const handleOpenEdit = () => {
     if (!event) return;
-    setEditTitle(event.title);
-    setEditLocal(event.local);
-    setEditDuration(event.duration?.toString() || "");
-    setIsEditModalVisible(true);
-  };
-
-  const handleUpdateEvent = async () => {
-    if (!editTitle.trim() || !editLocal.trim()) {
-      Alert.alert("Erro", "Título e local são obrigatórios.");
-      return;
-    }
-    try {
-      await updateEvent({
-        title: editTitle,
-        local: editLocal,
-        duration: parseInt(editDuration) || 0
-      });
-      setIsEditModalVisible(false);
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível atualizar o evento.");
-    }
+    router.push(`/event/edit/${id}`);
   };
 
   const handlePickImage = async () => {
@@ -354,93 +334,6 @@ export default function EventDetailsScreen() {
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
-
-      {/* Modal de Edição */}
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsEditModalVisible(false)}
-      >
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.editModalOverlay}>
-          <View style={styles.editModalContentFull}>
-            <View style={styles.editModalHeaderFull}>
-              <Text style={styles.editModalTitleFull}>Editar Evento</Text>
-              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <MaterialCommunityIcons name="close" size={28} color="#ffffff" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.editFormContainer} keyboardShouldPersistTaps="handled">
-              
-              <Text style={styles.formLabel}>Capa do Evento</Text>
-              <TouchableOpacity style={styles.editModalImagePicker} onPress={handlePickImage}>
-                <Image 
-                  source={event.banner ? { uri: getImageUrl(event.banner)! } : DEFAULT_COVER} 
-                  style={styles.editModalImagePreview} 
-                />
-                <View style={styles.editModalImageOverlay}>
-                  <MaterialCommunityIcons name="camera-plus" size={32} color="#ffffff" />
-                  <Text style={styles.editModalImageText}>Alterar Capa</Text>
-                </View>
-              </TouchableOpacity>
-
-              <Text style={styles.formLabel}>Nome do Evento</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="text-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Ex: Festa da Computação"
-                  placeholderTextColor={colors.textSecondary}
-                  value={editTitle}
-                  onChangeText={setEditTitle}
-                />
-              </View>
-
-              <Text style={styles.formLabel}>Local</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Ex: Pátio Principal"
-                  placeholderTextColor={colors.textSecondary}
-                  value={editLocal}
-                  onChangeText={setEditLocal}
-                />
-              </View>
-
-              <Text style={styles.formLabel}>Duração (em minutos)</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="time-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.formInput}
-                  placeholder="Ex: 120"
-                  placeholderTextColor={colors.textSecondary}
-                  value={editDuration}
-                  onChangeText={setEditDuration}
-                  keyboardType="numeric"
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.saveButtonFull}
-                onPress={handleUpdateEvent}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={[colors.orangePrimary, colors.orangePrimary]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.saveGradient}
-                >
-                  <Text style={styles.saveButtonTextFull}>Salvar Alterações</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
 
       {/* Modal de Interessados */}
       <Modal
@@ -772,111 +665,126 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  editModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    justifyContent: 'flex-end',
-  },
-  editModalContentFull: {
-    backgroundColor: colors.backgroundDark,
-    width: '100%',
-    height: '85%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  editModalHeaderFull: {
+  editHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#2d3748',
+    borderBottomColor: colors.backgroundDarkSecondary,
   },
-  editModalTitleFull: {
-    color: colors.orangePrimary,
-    fontSize: 24,
-    fontWeight: 'bold',
+  editHeaderBtn: {
+    padding: 4,
+    minWidth: 70,
+  },
+  editHeaderCancelText: {
+    fontFamily: 'Montserrat_500Medium',
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  editHeaderTitle: {
     fontFamily: 'Montserrat_700Bold',
+    fontSize: 17,
+    color: colors.textPrimaryDark,
+  },
+  editHeaderSaveText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 14,
+    color: colors.orangePrimary,
+    textAlign: 'right',
   },
   editFormContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    flex: 1,
   },
-  formLabel: {
-    fontSize: 14,
-    color: '#e2e8f0',
+  editFormContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  editCoverUploader: {
+    height: 160,
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.orangePrimary,
+    backgroundColor: 'rgba(252, 185, 40, 0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    overflow: 'hidden',
+  },
+  editCoverImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 14,
+  },
+  editCoverIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(252, 185, 40, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
-    marginLeft: 4,
-    fontWeight: '600',
   },
-  inputWrapper: {
+  editCoverText: {
+    fontWeight: 'bold',
+    fontSize: 13,
+    color: colors.orangePrimary,
+  },
+  editCoverSubtext: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  editFieldsContainer: {
+    gap: 16,
+  },
+  editField: {
+    gap: 6,
+  },
+  editFieldLabel: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 13,
+    color: colors.textPrimaryDark,
+  },
+  editInputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.backgroundDarkSecondary,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 24,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
-  formInput: {
+  editInputFlex: {
     flex: 1,
-    fontSize: 15,
-    color: '#ffffff',
-  },
-  saveButtonFull: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: colors.orangePrimary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  saveGradient: {
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonTextFull: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'Montserrat_700Bold',
-  },
-  editModalImagePicker: {
-    width: '100%',
-    height: 160,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 24,
-    backgroundColor: colors.backgroundDarkSecondary,
-  },
-  editModalImagePreview: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  editModalImageOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editModalImageText: {
-    color: '#ffffff',
+    fontFamily: 'Montserrat_500Medium',
     fontSize: 14,
+    color: colors.textPrimaryDark,
+  },
+  editStickyFooter: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.backgroundDark,
+    borderTopWidth: 1,
+    borderTopColor: colors.backgroundDarkSecondary,
+  },
+  editStickySaveBtn: {
+    backgroundColor: colors.orangePrimary,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+  },
+  editStickySaveBtnText: {
     fontFamily: 'Montserrat_700Bold',
-    marginTop: 8,
+    fontSize: 15,
+    color: colors.backgroundDark,
   }
 });
