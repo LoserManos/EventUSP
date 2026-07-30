@@ -104,6 +104,7 @@ class EventUpdateSchema(BaseModel):
     local: Optional[str] = None
     category_id: Optional[int] = None
     organization_id: Optional[int] = None
+    banner: Optional[str] = None
 
     @field_validator('title', 'local')
     @classmethod
