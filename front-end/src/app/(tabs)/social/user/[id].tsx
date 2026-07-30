@@ -61,10 +61,16 @@ export default function UserProfilePage({ userId }: { userId?: string | number }
         
         {/* Cabeçalho do Perfil (Novo Top Bar Opcional) */}
         <View style={localStyles.topBar}>
-          <Text style={[globalStyles.title, { marginBottom: 0 }]}>{isMe ? 'Perfil' : user.name}</Text>
-          {isMe && (
-            <TouchableOpacity onPress={() => router.push('/settings')} style={localStyles.iconButton}>
-              <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
+          {isMe ? (
+            <>
+              <Text style={[globalStyles.title, { marginBottom: 0 }]}>Perfil</Text>
+              <TouchableOpacity onPress={() => router.push('/settings')} style={localStyles.iconButton}>
+                <Ionicons name="settings-outline" size={24} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity onPress={() => router.back()} style={{ padding: 4 }}>
+              <Ionicons name="arrow-back" size={28} color={colors.textPrimaryDark} />
             </TouchableOpacity>
           )}
         </View>
@@ -180,7 +186,14 @@ export default function UserProfilePage({ userId }: { userId?: string | number }
         users={relations.followersList}
         currentLoggedUserId={authUser?.id}
         followingIds={relations.followingIds}
-        onSelectUser={(selectedId) => { setModalType(null); router.push(`/social/user/${selectedId}`); }}
+        onSelectUser={(selectedId) => { 
+          setModalType(null); 
+          if (selectedId === authUser?.id) {
+            router.push('/profile');
+          } else {
+            router.push(`/social/user/${selectedId}`); 
+          }
+        }}
         emptyMessage="Nenhum seguidor encontrado."
       />
 
@@ -191,7 +204,14 @@ export default function UserProfilePage({ userId }: { userId?: string | number }
         users={relations.followingList}
         currentLoggedUserId={authUser?.id}
         followingIds={relations.followingIds}
-        onSelectUser={(selectedId) => { setModalType(null); router.push(`/social/user/${selectedId}`); }}
+        onSelectUser={(selectedId) => { 
+          setModalType(null); 
+          if (selectedId === authUser?.id) {
+            router.push('/profile');
+          } else {
+            router.push(`/social/user/${selectedId}`); 
+          }
+        }}
         emptyMessage="Não está seguindo ninguém."
       />
 

@@ -71,7 +71,13 @@ export function UserFeed({ searchQuery }: { searchQuery: string }) {
             user={item} 
             isCurrentUser={isCurrentUser}
             initialIsFollowing={isFollowing} 
-            onPress={() => router.push(`/social/user/${item.id}`)} 
+            onPress={() => {
+              if (isCurrentUser) {
+                router.push('/profile');
+              } else {
+                router.push(`/social/user/${item.id}`);
+              }
+            }} 
           />
         );
       }}
