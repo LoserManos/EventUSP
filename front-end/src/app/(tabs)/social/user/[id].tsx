@@ -170,6 +170,7 @@ export default function UserProfilePage({ userId }: { userId?: string | number }
                   location={item.local}
                   dates={dateObj.toLocaleDateString('pt-BR')}
                   free={true}
+                  image={item.banner ? { uri: getImageUrl(item.banner) } : undefined}
                 />
               );
             })
