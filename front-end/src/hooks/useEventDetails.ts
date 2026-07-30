@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { eventsService } from '../services/eventService';
 import { userService } from '../services/userService';
+import { orgService } from '../services/orgService';
 import { Event } from '../types/event';
 import { User } from '../types/user';
 import { Comment } from '../types/comment';
@@ -11,6 +12,7 @@ export function useEventDetails(id: number | string | undefined) {
   const [interested, setInterested] = useState<User[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [author, setAuthor] = useState<User | null>(null);
+  const [organization, setOrganization] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,12 +28,14 @@ export function useEventDetails(id: number | string | undefined) {
           likersData,
           interestedData,
           commentsData,
-          authorData
+          authorData,
+          orgData
         ] = await Promise.all([
           eventsService.getEventLikes(eventId),
           eventsService.getEventInterests(eventId),
           eventsService.getEventComments(eventId),
-          userService.getUser(eventData.user_id)
+          userService.getUser(eventData.user_id),
+          eventData.organization_id ? orgService.getOrg(eventData.organization_id).catch(() => null) : Promise.resolve(null)
         ]);
         
         setEvent(eventData);
@@ -39,6 +43,7 @@ export function useEventDetails(id: number | string | undefined) {
         setInterested(interestedData);
         setComments(commentsData);
         setAuthor(authorData);
+        setOrganization(orgData);
       } catch (error) {
         console.error("Erro no useEventDetails:", error);
       } finally {
@@ -130,6 +135,7 @@ export function useEventDetails(id: number | string | undefined) {
     interested,
     comments,
     author,
+    organization,
     loading,
     toggleInterest,
     toggleLike,

@@ -36,9 +36,9 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-function InfoRow({ icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoRow({ icon, label, value, onPress }: { icon: any; label: string; value: string; onPress?: () => void }) {
   return (
-    <View style={styles.infoRowContainer}>
+    <TouchableOpacity style={styles.infoRowContainer} onPress={onPress} disabled={!onPress}>
       <View style={styles.infoRowIconBox}>
         <MaterialCommunityIcons name={icon} size={20} color={ACCENT_DARK} />
       </View>
@@ -46,7 +46,7 @@ function InfoRow({ icon, label, value }: { icon: any; label: string; value: stri
         <Text style={styles.infoRowLabel}>{label}</Text>
         <Text style={styles.infoRowValue} numberOfLines={1}>{value}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -54,7 +54,7 @@ export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const { event, likers, interested, comments, author, loading, 
+  const { event, likers, interested, comments, author, organization, loading, 
           toggleLike, toggleInterest, addComment, deleteEvent, updateEvent, uploadImage, uploadBanner } = useEventDetails(id as string);
   const { user: currentUser } = useFetchUser();
   const [going, setGoing] = useState(false);
@@ -205,7 +205,7 @@ export default function EventDetailsScreen() {
   const dateObj = new Date(event.start_date);
   const formattedDate = dateObj.toLocaleDateString('pt-BR');
   const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const organizerName = author ? author.name : "Comunidade USP";
+  const organizerName = organization ? organization.name : (author ? author.name : "Comunidade USP");
   const isFree = true;
 
   return (
@@ -265,7 +265,18 @@ export default function EventDetailsScreen() {
             </View>
             <View style={styles.gridColumn}>
               <InfoRow icon="clock-outline" label="Horário" value={formattedTime} />
-              <InfoRow icon="account-tie" label="Organizador" value={organizerName} />
+              <InfoRow 
+                icon="account-tie" 
+                label="Organizador" 
+                value={organizerName} 
+                onPress={() => {
+                  if (organization) {
+                    router.push(`/social/org/${organization.id}`);
+                  } else if (author) {
+                    router.push(`/social/user/${author.id}`);
+                  }
+                }}
+              />
             </View>
           </View>
 
