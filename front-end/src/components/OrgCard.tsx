@@ -1,9 +1,13 @@
 // src/components/OrgCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '@/styles/global';
 import { getImageUrl } from '@/utils/image';
 import { Organization } from '@/types/org';
+import { User } from '@/types/user';
+import { UserListModal } from '@/components/UserListModal';
+import { orgService } from '@/services/orgService';
+import { useRouter } from 'expo-router';
 
 const orgPlaceholder = require('@/assets/images/LA.png');
 
@@ -29,6 +33,26 @@ export function OrgCard({
   const avatarSource = organization.picture_profile 
     ? { uri: getImageUrl(organization.picture_profile)! } 
     : orgPlaceholder;
+
+  const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [membersList, setMembersList] = useState<User[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  const handleOpenMembers = async () => {
+    setModalVisible(true);
+    if (membersList.length === 0) {
+      setLoadingMembers(true);
+      try {
+        const members = await orgService.getOrgMembers(organization.id);
+        setMembersList(members);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingMembers(false);
+      }
+    }
+  };
 
   return (
     <TouchableOpacity style={styles.cardContainer} onPress={onPress} activeOpacity={0.85}>
@@ -68,19 +92,39 @@ export function OrgCard({
         <View style={styles.titleRow}>
           <Text style={styles.nameText} numberOfLines={1}>{organization.name}</Text>
         </View>
-        <Text style={styles.handleText} numberOfLines={1}>@org_{organization.id}</Text>
+        {/* <Text style={styles.handleText} numberOfLines={1}>@org_{organization.id}</Text> */}
 
 
-
+{/* 
         <View style={styles.statsRow}>
+          <TouchableOpacity onPress={(e) => { e.stopPropagation(); handleOpenMembers(); }}>
+            <Text style={styles.statText}>
+              <Text style={styles.statBold}>{organization.members_count ?? '--'}</Text> membros
+            </Text>
+          </TouchableOpacity>
           <Text style={styles.statText}>
-            <Text style={styles.statBold}>--</Text> seguidores
+            <Text style={styles.statBold}>{organization.events_count ?? '--'}</Text> eventos
           </Text>
-          <Text style={styles.statText}>
-            <Text style={styles.statBold}>--</Text> eventos
-          </Text>
-        </View>
+        </View> */}
       </View>
+
+      <UserListModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={`Membros de ${organization.name}`}
+        users={membersList}
+        currentLoggedUserId={currentUserId}
+        followingIds={[]}
+        onSelectUser={(userId) => {
+          setModalVisible(false);
+          if (userId === currentUserId) {
+            router.push('/profile');
+          } else {
+            router.push(`/social/user/${userId}`);
+          }
+        }}
+        emptyMessage={loadingMembers ? "Carregando membros..." : "Nenhum membro encontrado."}
+      />
     </TouchableOpacity>
   );
 }
