@@ -28,7 +28,11 @@ export function useUserEdit(user: User | null, onUpdateSuccess: (updatedUser: Pa
 
   const handleSaveProfile = async () => {
     try {
-      const updated = await userService.updateMyProfile({ name: editName, nickname: editNickname, bio: editBio });
+      const updated = await userService.updateMyProfile({ 
+        name: editName.trim(), 
+        nickname: editNickname.trim(), 
+        bio: editBio.trim() || null 
+      });
       let newPictureProfile = user?.picture_profile;
 
       if (selectedImageUri) {

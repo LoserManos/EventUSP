@@ -26,7 +26,7 @@ export interface UserRegisterDTO {
 export interface UserUpdateDTO {
   name?: string;
   nickname?: string;
-  bio?: string;
+  bio?: string | null;
 }
 
 // Espelho do PaginatedUserResponse — retornado pela rota GET /usuarios/
