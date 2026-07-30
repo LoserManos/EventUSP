@@ -1,11 +1,9 @@
-// src/app/social/org/create.tsx
 import React, { useState } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,8 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { useRouter } from 'expo-router';
 import { orgService } from '@/services/orgService';
 
@@ -50,7 +47,6 @@ export default function CreateOrgScreen() {
       setName('');
       setDescription('');
       
-      // Redireciona para a página da organização recém-criada ou lista
       router.push(`/social/org/${response.organizacao_id}`);
     } catch (err: any) {
       console.log('Falha ao criar organização', err);
@@ -61,29 +57,29 @@ export default function CreateOrgScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={globalStyles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={globalStyles.infoForm}
           keyboardShouldPersistTaps="handled"
         >
           {/* Cabeçalho */}
-          <View style={styles.header}>
-            <Text style={styles.titulo}>Criar Organização</Text>
-            <Text style={styles.subtitulo}>
+          <View style={{ marginBottom: 16 }}>
+            <Text style={globalStyles.title}>Criar Organização</Text>
+            <Text style={globalStyles.secondaryText}>
               Preencha os dados abaixo para estruturar sua nova organização.
             </Text>
           </View>
           
           {/* Nome da Organização */}
-          <Text style={styles.label}>Nome da Organização</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="people-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          <Text style={globalStyles.label}>Nome da Organização</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="people-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.input}
+              style={[globalStyles.input, { flex: 1 }]}
               placeholder="Ex: Liga Acadêmica de Computação"
               placeholderTextColor={colors.textSecondary}
               value={name}
@@ -92,11 +88,11 @@ export default function CreateOrgScreen() {
           </View>
 
           {/* Descrição */}
-          <Text style={styles.label}>Descrição</Text>
-          <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-            <Ionicons name="document-text-outline" size={20} color={colors.textSecondary} style={[styles.inputIcon, { alignSelf: 'flex-start', marginTop: 4 }]} />
+          <Text style={globalStyles.label}>Descrição</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+            <Ionicons name="document-text-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8, marginTop: 8 }} />
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[globalStyles.input, globalStyles.formTextArea, { flex: 1 }]}
               placeholder="Fale um pouco sobre a organização..."
               placeholderTextColor={colors.textSecondary}
               value={description}
@@ -106,117 +102,23 @@ export default function CreateOrgScreen() {
           </View>
 
           {/* Mensagem de Erro (se houver) */}
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={{ color: colors.redWarning, fontSize: 12, textAlign: 'center', fontWeight: 'bold' }}>{error}</Text>}
 
           {/* Botão de Criar */}
           <TouchableOpacity
-            style={styles.createButton}
+            style={globalStyles.formSaveButton}
             onPress={handleCreateOrg}
             activeOpacity={0.85}
             disabled={loading}
           >
-            <LinearGradient
-              colors={[colors.orangePrimary, colors.orangePrimary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.backgroundDark} />
-              ) : (
-                <Text style={styles.createButtonText}>Criar Organização</Text>
-              )}
-            </LinearGradient>
+            {loading ? (
+              <ActivityIndicator color={colors.backgroundDark} />
+            ) : (
+              <Text style={globalStyles.formSaveButtonText}>Criar Organização</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  titulo: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: colors.orangePrimary,
-    marginBottom: 8,
-  },
-  subtitulo: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    lineHeight: 21,
-  },
-  label: {
-    fontSize: 14,
-    color: colors.textPrimaryDark,
-    marginBottom: 8,
-    marginLeft: 4,
-    fontWeight: '600',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.backgroundDarkSecondary,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 20,
-  },
-  textAreaWrapper: {
-    height: 120,
-    alignItems: 'flex-start',
-    paddingVertical: 14,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textPrimaryDark,
-  },
-  textArea: {
-    height: '100%',
-    textAlignVertical: 'top',
-  },
-  createButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: colors.orangePrimary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  gradient: {
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  createButtonText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-});

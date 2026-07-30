@@ -26,10 +26,10 @@ export function EditProfileModal({
     <UserOverlayModal visible={visible} onClose={onClose} title="Editar Perfil">
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 10 }}>
 
-        <View style={{ alignItems: 'center', marginBottom: 10 }}>
-          <Image source={avatarSource} style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} />
-          <TouchableOpacity onPress={handlePickImage} style={{ padding: 4 }}>
-            <Text style={{ color: colors.orangePrimary, fontSize: 12, fontWeight: 'bold' }}>Alterar foto de perfil</Text>
+        <View style={globalStyles.infoFormImageContainer}>
+          <Image source={avatarSource} style={globalStyles.profilePicture} />
+          <TouchableOpacity onPress={handlePickImage} style={globalStyles.interactionButton}>
+            <Text style={[globalStyles.label, { color: colors.bluePrimary }]}>Alterar foto de perfil</Text>
           </TouchableOpacity>
         </View>
 

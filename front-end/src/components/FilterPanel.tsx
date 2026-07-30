@@ -22,19 +22,27 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
 
   return (
     <ScrollView style={styles.panelContainer} nestedScrollEnabled={true}>
-      <Text style={globalStyles.sectionTitle}>Filtros Avançados</Text>
-
       {/* --- CATEGORIA --- */}
       <View style={styles.section}>
-        <Text style={styles.label}>Categoria</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+        <Text style={globalStyles.primaryText}>Categoria</Text>
+        <ScrollView horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    style={{flexDirection: 'row', gap: 16}}>
           {CATEGORY_TYPES.map((cat) => (
             <Pressable
               key={cat}
-              style={[styles.pill, selectedCategory === cat && styles.pillActive]}
+              style={[globalStyles.badge, 
+                      {marginRight: 8},
+                      selectedCategory === cat ?
+                      globalStyles.orangeInteractionButton :
+                      {backgroundColor: colors.backgroundDark}
+                    ]}
               onPress={() => setSelectedCategory(cat)}
             >
-              <Text style={[styles.pillText, selectedCategory === cat && styles.pillTextActive]}>
+              <Text style={[globalStyles.interactionButtonText, 
+                            selectedCategory === cat ? 
+                            {color: colors.backgroundDark} :
+                            {color: colors.textSecondary}]}>
                 {cat.toUpperCase()}
               </Text>
             </Pressable>
@@ -44,26 +52,29 @@ export default function FilterPanel({ onApplyFilters, currentFilters }: FilterPa
 
       {/* --- ORDENAÇÃO --- */}
       <View style={styles.section}>
-        <Text style={styles.label}>Ordenar resultados por:</Text>
-        <View style={styles.sortRow}>
-          <Pressable 
-            style={[styles.sortBtnSmall, sortBy === 'date_asc' && styles.sortBtnActive]}
-            onPress={() => setSortBy('date_asc')}
-          >
-            <Text style={[styles.sortTextSmall, sortBy === 'date_asc' && styles.sortTextActive]}>Próximos</Text>
-          </Pressable>
-          <Pressable 
-            style={[styles.sortBtnSmall, sortBy === 'date_desc' && styles.sortBtnActive]}
-            onPress={() => setSortBy('date_desc')}
-          >
-            <Text style={[styles.sortTextSmall, sortBy === 'date_desc' && styles.sortTextActive]}>Recentes</Text>
-          </Pressable>
-          <Pressable 
-            style={[styles.sortBtnSmall, sortBy === 'likes' && styles.sortBtnActive]}
-            onPress={() => setSortBy('likes')}
-          >
-            <Text style={[styles.sortTextSmall, sortBy === 'likes' && styles.sortTextActive]}>+ Likes</Text>
-          </Pressable>
+        <Text style={globalStyles.primaryText}>Ordenar resultados por:</Text>
+        <View style={[globalStyles.buttonsTab, {marginVertical:0 , justifyContent: 'space-between'}]}>
+          {([
+              { key: 'date_asc', label: 'Próximos' },
+              { key: 'date_desc', label: 'Recentes' },
+              { key: 'likes', label: '+ Likes' },
+            ] as const ).map((item) => (
+            <Pressable 
+              key={item.key}
+              style={[globalStyles.interactionButton, 
+                      sortBy === item.key ?
+                      globalStyles.orangeInteractionButton :
+                      {backgroundColor: colors.backgroundDark}]}
+              onPress={() => setSortBy(item.key)}
+            >
+              <Text style={[globalStyles.interactionButtonText, 
+                      sortBy === item.key ?
+                      globalStyles.primaryInteractionText :
+                      globalStyles.pressedInteractionText]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </View>
 
@@ -88,99 +99,15 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.backgroundDarkSecondary,
     borderRadius: 8,
-    boxShadow: `0px 4px 4px 0px ${colors.shadow}`,
-    maxHeight: 400, 
+    elevation: 20,
   },
   section: {
+    gap: 8,
     marginBottom: 20,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textPrimaryDark,
-    marginBottom: 8,
-  },
-  input: {
-    color: colors.textPrimaryDark,
-    height: 44,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: colors.backgroundDark,
-  },
-  horizontalScroll: {
-    flexDirection: 'row',
-  },
-  pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundDark,
-    marginRight: 8,
-  },
-  pillActive: {
-    backgroundColor: `${colors.orangePrimary}25`, 
- },
-  pillText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  pillTextActive: {
-    color: colors.orangePrimary,
-    fontWeight: 'bold',
-  },
 
-  // Estilos para Data e Hora (Inputs na mesma linha das labels)
-  rowInputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  sideLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    flex: 1, // Faz a label ocupar o espaço à esquerda
-  },
-  sideInput: {
-    color: colors.textPrimaryDark,
-    height: 40,
-    width: '60%',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: colors.backgroundDark,
-  },
-
-  // Estilos para Ordenação (Lado a lado e menores)
-  sortRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8, // Espaçamento entre os botões
-  },
-  sortBtnSmall: {
-    flex: 1, // Faz com que os 3 botões dividam a largura igualmente
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sortBtnActive: {
-    backgroundColor: `${colors.orangePrimary}25`, 
-  },
-  sortTextSmall: {
-    fontSize: 12, // Texto menor
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  sortTextActive: {
-    color: colors.orangePrimary,
-    fontWeight: 'bold',
-  },
-
-  // Botão Final
   applyButton: {
-    backgroundColor: `${colors.bluePrimary}25`,
+    backgroundColor: colors.bluePrimary,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
@@ -188,7 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   applyButtonText: {
-    color: colors.bluePrimary,
+    color: colors.backgroundDarkSecondary,
     fontWeight: 'bold',
     fontSize: 16,
   }

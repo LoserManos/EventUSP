@@ -6,9 +6,7 @@ export default function CreateLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.backgroundDark,
-        },
+        headerShown: false ,
         headerTintColor: colors.textPrimaryDark,
         headerTitleStyle: {
           fontWeight: 'bold',

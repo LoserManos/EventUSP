@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,8 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { useRouter } from 'expo-router';
 import { useCreateEvent } from '@/hooks/useCreateEvent';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -22,13 +20,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 export default function CreateEventScreen() {
   const router = useRouter();
 
-  // Estados para os campos do formulário
   const [title, setTitle] = useState('');
   const [local, setLocal] = useState('');
   const [duration, setDuration] = useState('');
   const [category, setCategory] = useState('');
 
-  // Estados do DateTimePicker
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<any>(Platform.OS === 'ios' ? 'datetime' : 'date');
@@ -40,20 +36,16 @@ export default function CreateEventScreen() {
       if (event.type === 'set' && selectedDate) {
         setDate(selectedDate);
         if (pickerMode === 'date') {
-          // Após escolher a data no Android, abre o seletor de Hora
           setPickerMode('time');
         } else {
-          // Terminou de escolher a hora
           setShowPicker(false);
-          setPickerMode('date'); // Reseta para a próxima vez
+          setPickerMode('date');
         }
       } else {
-        // Usuário cancelou
         setShowPicker(false);
         setPickerMode('date');
       }
     } else {
-      // iOS atualiza em tempo real
       if (selectedDate) {
         setDate(selectedDate);
       }
@@ -101,29 +93,29 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={globalStyles.container}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={globalStyles.infoForm}
           keyboardShouldPersistTaps="handled"
         >
           {/* Cabeçalho */}
-          <View style={styles.header}>
-            <Text style={styles.titulo}>Criar Evento</Text>
-            <Text style={styles.subtitulo}>
+          <View style={{ marginBottom: 16 }}>
+            <Text style={globalStyles.title}>Criar Evento</Text>
+            <Text style={globalStyles.secondaryText}>
               Preencha os dados abaixo para divulgar seu novo evento.
             </Text>
           </View>
           
           {/* Nome do Evento */}
-          <Text style={styles.label}>Nome do Evento</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="text-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          <Text style={globalStyles.label}>Nome do Evento</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="text-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.input}
+              style={[globalStyles.input, { flex: 1 }]}
               placeholder="Ex: Festa da Computação"
               placeholderTextColor={colors.textSecondary}
               value={title}
@@ -132,11 +124,11 @@ export default function CreateEventScreen() {
           </View>
 
           {/* Local */}
-          <Text style={styles.label}>Local</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="location-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          <Text style={globalStyles.label}>Local</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="location-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.input}
+              style={[globalStyles.input, { flex: 1 }]}
               placeholder="Ex: Pátio Principal"
               placeholderTextColor={colors.textSecondary}
               value={local}
@@ -144,23 +136,22 @@ export default function CreateEventScreen() {
             />
           </View>
 
-          {/* Data e Hora (Botão Picker Nativo) */}
-          <Text style={styles.label}>Data e Hora</Text>
+          {/* Data e Hora */}
+          <Text style={globalStyles.label}>Data e Hora</Text>
           <TouchableOpacity 
-            style={styles.inputWrapper} 
+            style={[globalStyles.input, { flexDirection: 'row', alignItems: 'center' }]} 
             onPress={() => {
               setPickerMode(Platform.OS === 'ios' ? 'datetime' : 'date');
               setShowPicker(true);
             }}
             activeOpacity={0.7}
           >
-            <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
-            <Text style={styles.input}>
+            <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
+            <Text style={[globalStyles.primaryText, { fontSize: 12, flex: 1 }]}>
               {formatDisplayDate(date)}
             </Text>
           </TouchableOpacity>
 
-          {/* Renderização do Calendário */}
           {showPicker && (
             <DateTimePicker
               value={date}
@@ -172,11 +163,11 @@ export default function CreateEventScreen() {
           )}
 
           {/* Duração */}
-          <Text style={styles.label}>Duração (em minutos)</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="time-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          <Text style={globalStyles.label}>Duração (em minutos)</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="time-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.input}
+              style={[globalStyles.input, { flex: 1 }]}
               placeholder="Ex: 120"
               placeholderTextColor={colors.textSecondary}
               value={duration}
@@ -185,12 +176,12 @@ export default function CreateEventScreen() {
             />
           </View>
           
-          {/* Categoria (Estrutura provisória) */}
-          <Text style={styles.label}>ID da Categoria</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="pricetag-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
+          {/* Categoria */}
+          <Text style={globalStyles.label}>ID da Categoria</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="pricetag-outline" size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
-              style={styles.input}
+              style={[globalStyles.input, { flex: 1 }]}
               placeholder="Ex: 1 (Festa), 2 (Esporte)..."
               placeholderTextColor={colors.textSecondary}
               value={category}
@@ -199,109 +190,23 @@ export default function CreateEventScreen() {
             />
           </View>
 
-          {/* Mensagem de Erro (se houver) */}
-          {error && <Text style={styles.errorText}>{error}</Text>}
+          {error && <Text style={{ color: colors.redWarning, fontSize: 12, textAlign: 'center', fontWeight: 'bold' }}>{error}</Text>}
 
           {/* Botão de Criar */}
           <TouchableOpacity
-            style={styles.createButton}
+            style={globalStyles.formSaveButton}
             onPress={handleCreateEvent}
             activeOpacity={0.85}
             disabled={loading}
           >
-            <LinearGradient
-              colors={[colors.orangePrimary, colors.orangePrimary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradient}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.backgroundDark} />
-              ) : (
-                <Text style={styles.createButtonText}>Publicar Evento</Text>
-              )}
-            </LinearGradient>
+            {loading ? (
+              <ActivityIndicator color={colors.backgroundDark} />
+            ) : (
+              <Text style={globalStyles.formSaveButtonText}>Publicar Evento</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  errorText: {
-    color: '#FF3B30',
-    fontSize: 14,
-    marginBottom: 10,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  titulo: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: colors.orangePrimary,
-    marginBottom: 8,
-  },
-  subtitulo: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    lineHeight: 21,
-  },
-  label: {
-    fontSize: 14,
-    color: colors.textPrimaryDark,
-    marginBottom: 8,
-    marginLeft: 4,
-    fontWeight: '600',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.backgroundDarkSecondary,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 20,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.textPrimaryDark,
-  },
-  createButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginTop: 10,
-    shadowColor: colors.orangePrimary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  gradient: {
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  createButtonText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-});

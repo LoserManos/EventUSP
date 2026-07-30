@@ -1,35 +1,15 @@
-import HomeHeader from '@/components/HomeHeader';
+import React from 'react';
+import { View, StyleSheet, Text, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { colors, globalStyles } from '@/styles/global';
-import { useState } from 'react';
-import {
-  Image,
-  ScrollView,
-  Text,
-  View,
-  StyleSheet,
-  useWindowDimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-} from 'react-native';
-import { EventCard } from '@/components/EventCard';
-import { SocialPost } from '@/components/SocialPost';
-
-const images = [
-  require('../../../assets/images/Card.png'),
-  require('../../../assets/images/card2.jpg'),
-  require('../../../assets/images/card3.jpg'),
-];
-
-// Legenda exibida sobre cada slide (deixe vazio '' para slides sem legenda)
-const captions = ['', '', 'Viva a USP'];
-
-const minhaFoto = require('../../../assets/images/Event.png');
+import HomeHeader from '@/components/HomeHeader';
+import { useFollowingEventsFeed } from '@/hooks/useFollowingEventsFeed';
 
 export default function HomeScreen() {
-  const { width } = useWindowDimensions();
-  const imageWidth = width - 40;
-  const imageHeight = 200;
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const imageWidth = 350; // Ajuste conforme seu layout
+
+  // Hook customizado para gerenciar a paginação do feed de quem você segue
+  const followingFeed = useFollowingEventsFeed(20);
 
   const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / imageWidth);
@@ -37,160 +17,112 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView
-      style={globalStyles.container}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Cabeçalho com título e sino de notificações */}
-      <HomeHeader />
+    <View style={globalStyles.container}>
+      {/* Cabeçalho fixo no topo */}
+      <View>
+        <HomeHeader />
+      </View>
 
-      {/* Slider de imagens com legenda e indicadores */}
-      <View style={styles.sliderWrapper}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          style={styles.slider}
-          contentContainerStyle={styles.sliderContent}
-          onMomentumScrollEnd={handleScrollEnd}
-          scrollEventThrottle={16}
-        >
-          {images.map((imageSource, index) => (
-            <View key={index} style={{ width: imageWidth, height: imageHeight }}>
-              <Image
-                source={imageSource}
-                style={[styles.sliderImage, { width: imageWidth, height: imageHeight }]}
-                resizeMode="cover"
-              />
-              {captions[index] ? (
-                <View style={styles.captionWrapper}>
-                  <Text style={styles.captionText}>{captions[index]}</Text>
-                </View>
-              ) : null}
-            </View>
-          ))}
-        </ScrollView>
-
-        {/* Indicadores (dots) */}
-        <View style={styles.dotsWrapper}>
-          {images.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                index === activeIndex ? styles.dotActive : styles.dotInactive,
-              ]}
-            />
-          ))}
+      {/* Usamos um FlatList ou passamos o header como componente interno se preferir scroll unificado, 
+          mas seguindo o padrão do SearchPage, o EventFeed gerencia sua própria lista paginada */}
+      <View style={styles.content}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Eventos de quem você segue</Text>
         </View>
+
+        {/* Reutilizando a arquitetura do EventFeed com o hook customizado de seguindo */}
+        <CustomFollowingEventFeed />
       </View>
+    </View>
+  );
+}
 
-      {/* Eventos em destaque */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Eventos em destaque</Text>
-        <Text style={styles.sectionLink}>Ver todos</Text>
+// Sub-componente dedicado para injetar o hook de seguindo no modelo do EventFeed
+import { FlatList, ActivityIndicator } from 'react-native';
+import { EventCard } from '@/components/EventCard';
+import { getImageUrl } from '@/utils/image';
+
+function CustomFollowingEventFeed() {
+  const { data, loading, loadMoreEvents } = useFollowingEventsFeed(20);
+
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="large" color={colors.bluePrimary}/>
       </View>
+    );
+  };
 
-      <EventCard />
+  return (
+    <View style={styles.feedContainer}>
+      <FlatList
+        showsVerticalScrollIndicator={false}
+        data={data}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => {
+          const dateObj = new Date(item.start_date);
+          const formattedDate = dateObj.toLocaleDateString('pt-BR');
+          const formattedTime = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-      <EventCard
-        title="Rock na Vala"
-        organizer="FAUD-USP"
-        location="Vala da FAUD-USP"
-        dates="12/08"
-        time="18:00 - 23:00"
-        free={false}
-        image={minhaFoto}
+          return (
+            <EventCard
+              id={item.id}
+              title={item.title}
+              organizer={"Comunidade USP"}
+              location={item.local}
+              dates={formattedDate}
+              time={formattedTime}
+              free={true}
+              image={item.banner ? { uri: getImageUrl(item.banner)! } : undefined}
+            />
+          );
+        }}
+        onEndReached={loadMoreEvents}
+        onEndReachedThreshold={0.2}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          !loading ? (
+            <View style={{ padding: 40, alignItems: 'center' }}>
+              <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+                Nenhum evento encontrado de quem você segue.
+              </Text>
+            </View>
+          ) : null
+        }
       />
-
-      {/* Feed de amigos */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Feed de amigos</Text>
-        <Text style={styles.sectionLink}>Explorar</Text>
-      </View>
-
-      <SocialPost />
-
-      {/* ou customizado: */}
-      <SocialPost
-        username="Lucar Aura"
-        handle="@TheMostAura"
-        timeAgo="5h"
-        eventName="Junime"
-        likes={34}
-        comments={8}
-      />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    paddingBottom: 110,
+  content: {
+    flex: 1,
+    marginHorizontal: 8,
+    marginTop: 12,
   },
-  sliderWrapper: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  slider: {
-    width: '100%',
-  },
-  sliderContent: {
-    paddingHorizontal: 0,
-  },
-  sliderImage: {
-    borderRadius: 16,
-    marginHorizontal: 0,
-  },
-  captionWrapper: {
-    position: 'absolute',
-    left: 16,
-    bottom: 16,
-  },
-  captionText: {
-    fontSize: 20,
-    fontFamily: 'Montserrat_700Bold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  dotsWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginHorizontal: 3,
-  },
-  dotActive: {
-    backgroundColor: colors.bluePrimary,
-    width: 16,
-  },
-  dotInactive: {
-    backgroundColor: colors.backgroundDarkSecondary,
+  feedContainer: {
+    flex: 1,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 4,
     marginBottom: 12,
     marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Montserrat_700Bold',
     color: colors.textPrimaryDark,
   },
-  sectionLink: {
-    fontSize: 13,
-    fontFamily: 'Montserrat_400Regular',
-    color: colors.orangePrimary,
+  listContainer: {
+    paddingBottom: 40,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

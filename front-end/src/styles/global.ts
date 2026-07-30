@@ -33,7 +33,7 @@ export const globalStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 16
+    gap: 16,
   },
   itemsList: {
     paddingBottom: 10,
@@ -43,6 +43,21 @@ export const globalStyles = StyleSheet.create({
   centered: { 
     justifyContent: 'center', 
     alignItems: 'center' 
+  },
+
+  badge: {
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: colors.orangePrimary,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 24,
+  },
+  badgeText: {
+    color: colors.backgroundDark,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: "Montserrat_400Regular",
   },
 
   title: {
@@ -120,9 +135,10 @@ export const globalStyles = StyleSheet.create({
   },
 
   socialItemContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    width: "100%",
     backgroundColor: colors.backgroundDark,
     borderRadius: 8,
     margin: 4,
@@ -161,7 +177,7 @@ export const globalStyles = StyleSheet.create({
     fontSize: 12,
   },
   primaryInteractionText: {
-    color: '#FFF',
+    color: colors.backgroundDark,
   },
   pressedInteractionText: {
     color: colors.textSecondary,
@@ -234,7 +250,7 @@ export const globalStyles = StyleSheet.create({
     marginTop: 8 
   },
   formSaveButtonText: { 
-    color: '#FFF', 
+    color: colors.backgroundDark, 
     fontWeight: 'bold', 
     fontSize: 12 
   },
