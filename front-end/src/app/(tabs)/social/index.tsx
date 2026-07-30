@@ -12,6 +12,7 @@ export default function SocialPage() {
 
   return (
     <View style={globalStyles.container}>
+      <Text style={globalStyles.title}>Explorar</Text>
       <View style={globalStyles.header}>
         <SearchBar 
           value={searchQuery} 

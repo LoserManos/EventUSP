@@ -1,21 +1,19 @@
 // src/app/create/index.tsx
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { useRouter } from 'expo-router';
 
 export default function CreateHubScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.titulo}>O que você deseja criar?</Text>
-          <Text style={styles.subtitulo}>
+    <View style={globalStyles.container}>
+      <View style={styles.header}>
+        <Text style={globalStyles.title}>Criar</Text>
+        <Text style={styles.subtitulo}>
             Escolha uma das opções abaixo para começar a publicar na plataforma.
           </Text>
         </View>
@@ -63,29 +61,13 @@ export default function CreateHubScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
-  },
   header: {
     marginBottom: 32,
-  },
-  titulo: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: colors.orangePrimary,
-    marginBottom: 8,
   },
   subtitulo: {
     fontSize: 15,

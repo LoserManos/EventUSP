@@ -46,10 +46,16 @@ export const globalStyles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 24,
-    color: colors.textPrimaryDark,
-    fontWeight: 'bold',
+    fontSize: 28,
+    color: '#FFFFFF',
     fontFamily: "Montserrat_700Bold",
+    marginBottom: 8,
+  },
+  pageTitle: {
+    fontSize: 34,
+    color: colors.orangePrimary,
+    fontFamily: "Montserrat_700Bold",
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 16,

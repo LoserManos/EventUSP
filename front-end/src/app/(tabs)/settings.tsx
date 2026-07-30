@@ -9,8 +9,8 @@ export default function SettingsScreen() {
   const { signOut } = useAuth(); // Extrai a função de logout do AuthContext[cite: 7]
 
   return (
-    <View style={[globalStyles.container, styles.container]}>
-      <Text style={styles.headerTitle}>Configurações</Text>
+    <View style={globalStyles.container}>
+      <Text style={globalStyles.title}>Configurações</Text>
 
       <View style={styles.section}>
         {/* Opção de Sair da Conta */}
@@ -28,17 +28,6 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: colors.backgroundDark,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.textPrimaryDark,
-    marginBottom: 24,
-  },
   section: {
     width: '100%',
     backgroundColor: colors.backgroundDarkSecondary,

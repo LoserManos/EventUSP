@@ -20,7 +20,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { eventsService, Category } from '@/services/eventService';
 import { userService } from '@/services/userService';
 import { Organization } from '@/types/org';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 
 const ACCENT = colors.orangePrimary;
 const ACCENT_DARK = colors.orangePrimary;
@@ -162,7 +162,7 @@ export default function CreateEventScreen() {
         >
           {/* Cabeçalho Original */}
           <View style={styles.pageHeader}>
-            <Text style={styles.titulo}>Criar Evento</Text>
+            <Text style={globalStyles.title}>Criar Evento</Text>
             <Text style={styles.subtitulo}>
               Preencha os dados abaixo para divulgar seu novo evento.
             </Text>
@@ -369,14 +369,8 @@ const styles = StyleSheet.create({
     backgroundColor: BG_COLOR,
   },
   pageHeader: {
-    marginBottom: 32,
+    marginBottom: 24,
     marginTop: 4,
-  },
-  titulo: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: colors.orangePrimary,
-    marginBottom: 8,
   },
   subtitulo: {
     fontSize: 15,
@@ -384,7 +378,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 24,
   },
   formContent: {

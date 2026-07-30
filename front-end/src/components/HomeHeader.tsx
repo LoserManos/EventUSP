@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
 
 type HomeHeaderProps = {
@@ -16,7 +16,7 @@ export default function HomeHeader({
 }: HomeHeaderProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={globalStyles.pageTitle}>{title}</Text>
 
       <TouchableOpacity
         style={styles.bellButton}
@@ -41,13 +41,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 10,
     paddingBottom: 20,
-  },
-  title: {
-    fontSize: 35,
-    fontFamily: 'Montserrat_700Bold',
-    color: colors.orangePrimary,
   },
   bellButton: {
     width: 40,

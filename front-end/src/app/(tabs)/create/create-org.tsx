@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { useRouter } from 'expo-router';
 import { orgService } from '@/services/orgService';
 
@@ -85,7 +85,7 @@ export default function CreateOrgScreen() {
         >
           {/* Cabeçalho */}
           <View style={styles.pageHeader}>
-            <Text style={styles.titulo}>Criar Organização</Text>
+            <Text style={globalStyles.title}>Criar Organização</Text>
             <Text style={styles.subtitulo}>
               Preencha os dados abaixo para estruturar sua nova organização.
             </Text>
@@ -159,19 +159,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginTop: 4,
   },
-  titulo: {
-    fontSize: 34,
-    fontWeight: 'bold',
-    color: colors.orangePrimary,
-    marginBottom: 8,
-  },
   subtitulo: {
     fontSize: 15,
     color: colors.textSecondary,
     lineHeight: 21,
   },
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 24,
   },
   formContent: {

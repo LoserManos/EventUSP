@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { colors, globalStyles } from '@/styles/global';
 
 import SearchBar from '@/components/SearchBar';
@@ -15,6 +15,7 @@ export default function SearchPage() {
 
   return (
     <View style={globalStyles.container}>
+      <Text style={globalStyles.title}>Buscar</Text>
       <View style={globalStyles.header}>
         <SearchBar 
           value={activeFilters.busca || ''} 
