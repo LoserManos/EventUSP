@@ -42,27 +42,23 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
     : userPlaceholder;
 
   return (
-    <Pressable style={globalStyles.socialItemContainer} onPress={onPress}>
-      <Image source={avatarSource} style={globalStyles.itemPicture} />
+    <Pressable style={styles.cardContainer} onPress={onPress}>
+      <Image source={avatarSource} style={styles.avatar} />
       
-      <View style={globalStyles.itemInfoContainer}>
-        <Text style={globalStyles.itemName}>{user.name}</Text>
-        <Text style={globalStyles.itemSecondaryName}>@{user.nickname}</Text>
+      <View style={styles.infoContainer}>
+        <Text style={styles.nameText} numberOfLines={1}>{user.name}</Text>
+        <Text style={styles.bioText} numberOfLines={1}>
+          @{user.nickname} {user.bio ? `· ${user.bio}` : ''}
+        </Text>
       </View>
 
       {!isCurrentUser && (
         <TouchableOpacity 
-          style={[globalStyles.interactionButton, 
-                  isFollowing ? 
-                  globalStyles.pressedInteractionButton :
-                  globalStyles.blueInteractionButton]} 
+          style={[styles.followBtn, isFollowing && styles.followingBtn]} 
           onPress={handleFollowToggle}
           disabled={loading}
         >
-          <Text style={[globalStyles.interactionButtonText, 
-                        isFollowing ? 
-                        globalStyles.pressedInteractionText :
-                        globalStyles.primaryInteractionText]}>
+          <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
             {isFollowing ? 'Seguindo' : 'Seguir'}
           </Text>
         </TouchableOpacity>
@@ -70,3 +66,63 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
     </Pressable>
   );
 }
+
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundDarkSecondary,
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.backgroundDark,
+    marginRight: 12,
+  },
+  infoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  nameText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 14,
+    color: colors.textPrimaryDark,
+    marginBottom: 2,
+  },
+  bioText: {
+    fontFamily: 'Montserrat_400Regular',
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  followBtn: {
+    backgroundColor: colors.orangePrimary,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  followBtnText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 12,
+    color: colors.backgroundDark,
+  },
+  followingBtn: {
+    backgroundColor: 'rgba(252, 185, 40, 0.15)', // colors.orangePrimary with opacity
+  },
+  followingBtnText: {
+    color: colors.orangePrimary,
+  }
+});

@@ -22,28 +22,23 @@ export default function SocialPage() {
       </View>
 
       {/* Botões de Seleção de Abas */}
-      <View style={globalStyles.buttonsTab}>
-        <TouchableOpacity 
-          style={[globalStyles.interactionButton,
-                  globalStyles.pressedInteractionButton,
-                  type === 'user' && globalStyles.orangeInteractionButton]} 
-          onPress={() => { setType('user'); setSearchQuery(''); }}
-        >
-          <Text style={[globalStyles.interactionButtonText,
-                        globalStyles.pressedInteractionText,
-                        type === 'user' && globalStyles.primaryInteractionText]}>Usuários</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[globalStyles.interactionButton,
-                  globalStyles.pressedInteractionButton,
-                  type === 'org' && globalStyles.orangeInteractionButton]} 
-          onPress={() => { setType('org'); setSearchQuery(''); }}
-        >
-          <Text style={[globalStyles.interactionButtonText,
-                        globalStyles.pressedInteractionText,
-                        type === 'org' && globalStyles.primaryInteractionText]}>Organizações</Text>
-        </TouchableOpacity>
+      <View style={styles.tabsContainer}>
+        <View style={styles.segmentedControl}>
+          <TouchableOpacity 
+            style={[styles.tabButton, type === 'user' && styles.tabButtonActive]}
+            onPress={() => { setType('user'); setSearchQuery(''); }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, type === 'user' && styles.tabTextActive]}>Pessoas</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, type === 'org' && styles.tabButtonActive]}
+            onPress={() => { setType('org'); setSearchQuery(''); }}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, type === 'org' && styles.tabTextActive]}>Organizadores</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Renderização Condicional dos Feeds */}
@@ -55,3 +50,42 @@ export default function SocialPage() {
     </View>
   );
 }
+
+import { StyleSheet } from 'react-native';
+import { colors } from '@/styles/global';
+
+const styles = StyleSheet.create({
+  tabsContainer: {
+    marginVertical: 12,
+  },
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: colors.backgroundDarkSecondary,
+    borderRadius: 16,
+    padding: 4,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  tabButtonActive: {
+    backgroundColor: colors.backgroundDark,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontFamily: 'Montserrat_700Bold',
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  tabTextActive: {
+    color: colors.orangePrimary,
+  },
+});

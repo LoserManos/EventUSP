@@ -1,16 +1,22 @@
-// src/app/settings/index.tsx
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors, globalStyles } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
-  const { signOut } = useAuth(); // Extrai a função de logout do AuthContext[cite: 7]
+  const { signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <View style={globalStyles.container}>
-      <Text style={globalStyles.title}>Configurações</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimaryDark} />
+        </TouchableOpacity>
+        <Text style={globalStyles.title}>Configurações</Text>
+      </View>
 
       <View style={styles.section}>
         {/* Opção de Sair da Conta */}
@@ -28,6 +34,16 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 10,
+    gap: 12,
+  },
+  backButton: {
+    padding: 4,
+  },
   section: {
     width: '100%',
     backgroundColor: colors.backgroundDarkSecondary,

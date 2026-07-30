@@ -37,9 +37,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name='social'
         options={{
-          title: 'Social',
+          title: 'Explorar',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name='person' size={size} color={color} />
+            <Ionicons name='compass' size={size} color={color} />
           ),
         }}
       />
@@ -53,11 +53,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='settings'
+        name='profile'
         options={{
-          title: 'Opcoes',
+          title: 'Perfil',
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome6 name='gear' size={size} color={color} />
+            <Ionicons name='person-circle' size={size} color={color} />
           ),
         }}
       />

@@ -1,6 +1,6 @@
 // src/components/OrgFeed.tsx
 import React, { useState, useEffect } from 'react';
-import { FlatList, ActivityIndicator } from 'react-native';
+import { FlatList, ActivityIndicator, View } from 'react-native';
 import { colors, globalStyles } from '@/styles/global';
 import { Organization } from '@/types/org';
 import { orgService } from '@/services/orgService';
@@ -95,24 +95,43 @@ export function OrgFeed({ searchQuery }: { searchQuery: string }) {
     <FlatList
       data={data}
       keyExtractor={(item) => item.id!.toString()}
+      numColumns={2}
+      columnWrapperStyle={styles.columnWrapper}
       renderItem={({ item }) => {
         const membership = item.id ? userMemberships[item.id] : null;
 
         return (
-          <OrgCard 
-            organization={item} 
-            currentUserId={currentLoggedUserId}
-            userMembership={membership}
-            onPress={() => router.push(`/social/org/${item.id}`)} 
-            onMembershipAction={() => handleMembershipAction(item)}
-          />
+          <View style={styles.cardContainer}>
+            <OrgCard 
+              organization={item} 
+              currentUserId={currentLoggedUserId}
+              userMembership={membership}
+              onPress={() => router.push(`/social/org/${item.id}`)} 
+              onMembershipAction={() => handleMembershipAction(item)}
+            />
+          </View>
         );
       }}
       onEndReached={() => loadOrganizations(false)}
       onEndReachedThreshold={0.5}
       ListFooterComponent={loading ? <ActivityIndicator color={colors.orangePrimary} /> : null}
-      contentContainerStyle={globalStyles.itemsList}
+      contentContainerStyle={[globalStyles.itemsList, styles.listContainer]}
       showsVerticalScrollIndicator={false}
     />
   );
 }
+
+import { StyleSheet } from 'react-native';
+const styles = StyleSheet.create({
+  listContainer: {
+    paddingBottom: 20,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: 12, // React Native 0.71+ supports gap on Flexbox
+  },
+  cardContainer: {
+    flex: 1,
+    maxWidth: '48%', // Ensure 2 columns fit evenly with gap
+  }
+});
