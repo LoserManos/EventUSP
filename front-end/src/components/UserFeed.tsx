@@ -1,11 +1,11 @@
 // src/components/UserFeed.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FlatList, ActivityIndicator } from 'react-native';
 import { colors, globalStyles } from '@/styles/global';
 import { User } from '@/types/user';
 import { userService } from '@/services/userService';
 import { UserCard } from '@/components/UserCard';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function UserFeed({ searchQuery }: { searchQuery: string }) {
@@ -20,19 +20,21 @@ export function UserFeed({ searchQuery }: { searchQuery: string }) {
   const [hasMore, setHasMore] = useState(true);
 
   // 1. Busca os IDs de quem o usuário logado segue para checagem rápida
-  useEffect(() => {
-    async function fetchFollowingStatus() {
-      if (!currentLoggedUserId) return;
-      try {
-        const followingList = await userService.getFollowing(currentLoggedUserId);
-        const ids = followingList.map((user) => user.id);
-        setFollowingIds(ids);
-      } catch (error) {
-        console.error("Erro ao carregar lista de seguindo:", error);
+  useFocusEffect(
+    useCallback(() => {
+      async function fetchFollowingStatus() {
+        if (!currentLoggedUserId) return;
+        try {
+          const followingList = await userService.getFollowing(currentLoggedUserId);
+          const ids = followingList.map((user) => user.id);
+          setFollowingIds(ids);
+        } catch (error) {
+          console.error("Erro ao carregar lista de seguindo:", error);
+        }
       }
-    }
-    fetchFollowingStatus();
-  }, [currentLoggedUserId]);
+      fetchFollowingStatus();
+    }, [currentLoggedUserId])
+  );
 
   const loadUsers = async (reset = false) => {
     if (loading || (!hasMore && !reset)) return;

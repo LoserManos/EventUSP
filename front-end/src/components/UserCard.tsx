@@ -1,5 +1,5 @@
 // src/components/UserCard.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, Pressable, TouchableOpacity } from 'react-native';
 import { User } from '@/types/user';
 import { colors, globalStyles } from '@/styles/global';
@@ -19,6 +19,10 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setIsFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
+
   const handleFollowToggle = async () => {
     if (loading || isCurrentUser) return;
     setLoading(true);
@@ -30,8 +34,13 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
         await userService.followUser(user.id);
         setIsFollowing(true);
       }
-    } catch (error) {
-      console.error("Erro ao alterar status de seguir:", error);
+    } catch (error: any) {
+      if (isFollowing && error.response && error.response.status === 404) {
+        // Se tentou deixar de seguir e deu 404, significa que já não seguia (estado desatualizado)
+        setIsFollowing(false);
+      } else {
+        console.error("Erro ao alterar status de seguir:", error);
+      }
     } finally {
       setLoading(false);
     }

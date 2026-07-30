@@ -53,8 +53,13 @@ export function useUserProfileData(userId: number, currentLoggedUserId?: number,
         setIsFollowing(true);
         setFollowersCount(prev => prev + 1);
       }
-    } catch (error) {
-      console.error("Erro ao alterar follow:", error);
+    } catch (error: any) {
+      if (isFollowing && error.response && error.response.status === 404) {
+        setIsFollowing(false);
+        setFollowersCount(prev => Math.max(0, prev - 1));
+      } else {
+        console.error("Erro ao alterar follow:", error);
+      }
     }
   };
 
