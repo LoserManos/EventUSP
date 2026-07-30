@@ -106,6 +106,7 @@ class Event(SQLModel, table=True):
     interested: List["User"] = Relationship(link_model=Interests, back_populates="interested_events")
     comments: List["Comment"] = Relationship(back_populates="event")
     category: "Category" = Relationship(back_populates="events") # Criado relacionamento com Category
+    banner: Optional[str] = Field(default="static/defaults/event.jpg")
     pictures: List["Event_picture"] = Relationship(back_populates="event") # lista de fotos do evento
 
 class Comment(SQLModel,table=True):
@@ -119,7 +120,7 @@ class Comment(SQLModel,table=True):
     event: "Event" = Relationship(back_populates="comments")
 
 class Event_picture(SQLModel,table=True):
-    __tablename = "event_picture"
+    __tablename__ = "event_picture"
     id: Optional[int] = Field(default=None,primary_key = True)
     event_id: int = Field(foreign_key="event.id")
     url: Optional[str] = Field(default="static/defaults/user.jpg") ## foto do carrosel do evento

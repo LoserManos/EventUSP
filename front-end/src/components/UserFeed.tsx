@@ -1,7 +1,7 @@
 // src/components/UserFeed.tsx
 import React, { useState, useEffect } from 'react';
-import { FlatList, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors } from '@/styles/global';
+import { FlatList, ActivityIndicator } from 'react-native';
+import { colors, globalStyles } from '@/styles/global';
 import { User } from '@/types/user';
 import { userService } from '@/services/userService';
 import { UserCard } from '@/components/UserCard';
@@ -78,12 +78,8 @@ export function UserFeed({ searchQuery }: { searchQuery: string }) {
       onEndReached={() => loadUsers(false)}
       onEndReachedThreshold={0.5}
       ListFooterComponent={loading ? <ActivityIndicator color={colors.orangePrimary} /> : null}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={globalStyles.itemsList}
       showsVerticalScrollIndicator={false}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  listContent: { paddingBottom: 20 },
-});

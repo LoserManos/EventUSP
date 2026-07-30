@@ -33,4 +33,7 @@ desktop.ini
 # --- Logs ---
 *.log
 
-back-end/app/static/
+back-end/app/static/defaults/org_*
+back-end/app/static/defaults/user_*
+back-end/app/static/defaults/event_*
+back-end/app/static/defaults/banner_*
