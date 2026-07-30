@@ -234,8 +234,11 @@ async def upload_event_photo(
 
     upload_dir = "app/static/defaults"
     os.makedirs(upload_dir, exist_ok=True)
-    
-    file_name = f"event_{evento_id}_{file.filename}"
+
+    pic_count = len(session.get(Event, evento_id).pictures)
+
+    #FALHA DE SEGURANCA, NAO DEVEMOS USAR O NOME DO ARQUIVO DE INPUT
+    file_name = f"event_{evento_id}_{file.filename}_{pic_count}" 
     file_path = f"{upload_dir}/{file_name}"
     
     with open(file_path, "wb") as buffer:
@@ -249,6 +252,44 @@ async def upload_event_photo(
     session.commit()
     
     return {"mensagem": "Foto adicionada no evento com sucesso.", "url": db_path}
+
+@router.patch("/{evento_id}/banner", status_code=status.HTTP_200_OK, response_model=EventResponseSchema)
+async def update_event_banner(
+    evento_id: int, 
+    file: UploadFile = File(...), 
+    current_user: User = Depends(get_actual_user),
+    session: Session = Depends(get_session)
+) -> Event:
+    """Atualiza ou define o banner principal de um evento."""
+    event = session.get(Event, evento_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Evento não encontrado.")
+        
+    if event.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Apenas o organizador pode alterar o banner do evento.")
+
+    upload_dir = "app/static/defaults"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    #FALHA DE SEGURANCA, NAO DEVEMOS USAR O NOME DO ARQUIVO DE INPUT
+    file_name = f"banner_event_{evento_id}_{file.filename}"
+    file_path = f"{upload_dir}/{file_name}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        buffer.flush()
+        os.fsync(buffer.fileno()) # Força a persistência física imediata no disco
+        
+    db_path = f"static/defaults/{file_name}"
+    
+    event.banner = db_path
+    
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+    
+    return event
+
 ### ATENÇÃO LEO! QUANDO FOR MECHER AQUI SIGA O MEDELO QUE ESTÁ NO AUTH.PY PARA PADRONIZAR O PROJETO
 ### SEGUIR O MODELO, ESTOU QUERENDO DIZER PARA CRIAR TIPOS PARA OS ARGUMENTOS DE CADA FUNÇÃO E CRIAR TIPOS PARA OS RETURNS(SE QUISER SABER O PQ MANDA UM SALVE NO ZAP)
 #### OS TIPOS ESTÃO NO ARQUIVO SCHEMA.PY, USAR ROUTER TAMBÉM DEPOS QUE TERMINAR A ROTA ADD ELA NA MAIN Q NEM EU FIZ, O RETORNA DA FUÇÃO CASO DE ERRO USE O HTTMeXEPECTION IGUAL NO AUTH.PY
