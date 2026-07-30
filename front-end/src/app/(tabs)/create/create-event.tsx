@@ -18,6 +18,8 @@ import { useRouter } from 'expo-router';
 import { useCreateEvent } from '@/hooks/useCreateEvent';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { eventsService, Category } from '@/services/eventService';
+import { userService } from '@/services/userService';
+import { Organization } from '@/types/org';
 import { colors } from '@/styles/global';
 
 const ACCENT = colors.orangePrimary;
@@ -63,7 +65,12 @@ export default function CreateEventScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
+  const [organizationId, setOrganizationId] = useState<number | null>(null);
+  const [userOrgs, setUserOrgs] = useState<Organization[]>([]);
+  const [loadingOrgs, setLoadingOrgs] = useState(true);
+
   useEffect(() => {
+    // Fetch categories
     eventsService.getCategories()
       .then((data) => {
         setCategories(data);
@@ -73,6 +80,13 @@ export default function CreateEventScreen() {
       })
       .catch((err) => console.error("Erro ao carregar categorias:", err))
       .finally(() => setLoadingCategories(false));
+
+    // Fetch user orgs
+    userService.getMe()
+      .then(user => userService.getOrgs(user.id))
+      .then(orgs => setUserOrgs(orgs))
+      .catch(err => console.error("Erro ao carregar organizações:", err))
+      .finally(() => setLoadingOrgs(false));
   }, []);
 
   // Date/Time
@@ -113,6 +127,7 @@ export default function CreateEventScreen() {
         start_date: date.toISOString(),
         duration: Number(duration) || 120, // default if empty/invalid
         category_id: category!,
+        organization_id: organizationId,
       };
 
       await createEvent(eventoParaEnviar);
@@ -183,6 +198,42 @@ export default function CreateEventScreen() {
                 onChangeText={setDuration}
                 keyboardType="numeric"
               />
+            </Field>
+
+            {/* Organizador */}
+            <Field label="Organizador" icon="people-outline">
+              <View style={styles.categoriesWrapper}>
+                {loadingOrgs ? (
+                  <ActivityIndicator color={ACCENT_DARK} size="small" style={{ marginVertical: 8 }} />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => setOrganizationId(null)}
+                      style={[styles.categoryChip, { backgroundColor: organizationId === null ? ACCENT : INPUT_BG }]}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.categoryChipText, { color: organizationId === null ? colors.backgroundDark : TEXT_MUTED }]}>
+                        Eu mesmo
+                      </Text>
+                    </TouchableOpacity>
+                    {userOrgs.map((org) => {
+                      const active = org.id === organizationId;
+                      return (
+                        <TouchableOpacity
+                          key={org.id}
+                          onPress={() => setOrganizationId(org.id)}
+                          style={[styles.categoryChip, { backgroundColor: active ? ACCENT : INPUT_BG }]}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={[styles.categoryChipText, { color: active ? colors.backgroundDark : TEXT_MUTED }]}>
+                            {org.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </>
+                )}
+              </View>
             </Field>
 
             {/* Category */}
