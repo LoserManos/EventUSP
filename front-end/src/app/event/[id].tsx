@@ -54,7 +54,8 @@ export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const { event, likers, interested, comments, author, loading, toggleLike, toggleInterest, addComment, deleteEvent, updateEvent, uploadImage } = useEventDetails(id as string);
+  const { event, likers, interested, comments, author, loading, 
+          toggleLike, toggleInterest, addComment, deleteEvent, updateEvent, uploadImage, uploadBanner } = useEventDetails(id as string);
   const { user: currentUser } = useFetchUser();
   const [going, setGoing] = useState(false);
   
@@ -175,7 +176,7 @@ export default function EventDetailsScreen() {
       } as any);
 
       try {
-        await uploadImage(formData);
+        await uploadBanner(formData);
       } catch (error) {
         Alert.alert("Erro", "Não foi possível enviar a imagem.");
       }

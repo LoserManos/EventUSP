@@ -101,6 +101,15 @@ export const eventsService = {
   async uploadEventImage(id: number, formData: any): Promise<any> {
     const response = await api.post(`/eventos/${id}/fotos`, formData);
     return response.data;
+  },
+
+  async updateEventBanner(id: number, formData: any): Promise<any> {
+    const response = await api.patch(`/eventos/${id}/banner`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   }
 };
 

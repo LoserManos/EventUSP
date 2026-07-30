@@ -112,6 +112,18 @@ export function useEventDetails(id: number | string | undefined) {
     }
   };
 
+  const uploadBanner = async (formData: any) => {
+    if (!id) return;
+    try {
+      await eventsService.updateEventBanner(Number(id), formData);
+      const updatedEvent = await eventsService.getEventById(Number(id));
+      setEvent(updatedEvent);
+    } catch (error) {
+      console.error("Erro ao atualizar o banner:", error);
+      throw error;
+    }
+  };
+
   return {
     event,
     likers,
@@ -124,6 +136,7 @@ export function useEventDetails(id: number | string | undefined) {
     addComment,
     deleteEvent,
     updateEvent,
-    uploadImage
+    uploadImage,
+    uploadBanner
   };
 }
