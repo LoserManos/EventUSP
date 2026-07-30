@@ -1,8 +1,8 @@
 // src/components/UserCard.tsx
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Pressable, TouchableOpacity } from 'react-native';
 import { User } from '@/types/user';
-import { colors } from '@/styles/global';
+import { colors, globalStyles } from '@/styles/global';
 import { userService } from '@/services/userService';
 import { getImageUrl } from '@/utils/image';
 
@@ -42,21 +42,27 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
     : userPlaceholder;
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <Image source={avatarSource} style={styles.avatar} />
+    <Pressable style={globalStyles.socialItemContainer} onPress={onPress}>
+      <Image source={avatarSource} style={globalStyles.itemPicture} />
       
-      <View style={styles.info}>
-        <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.username}>@{user.nickname}</Text>
+      <View style={globalStyles.itemInfoContainer}>
+        <Text style={globalStyles.itemName}>{user.name}</Text>
+        <Text style={globalStyles.itemSecondaryName}>@{user.nickname}</Text>
       </View>
 
       {!isCurrentUser && (
         <TouchableOpacity 
-          style={[styles.followButton, isFollowing ? styles.followingButton : styles.followButtonPrimary]} 
+          style={[globalStyles.interactionButton, 
+                  isFollowing ? 
+                  globalStyles.pressedInteractionButton :
+                  globalStyles.blueInteractionButton]} 
           onPress={handleFollowToggle}
           disabled={loading}
         >
-          <Text style={[styles.followButtonText, isFollowing ? styles.followingButtonText : styles.followButtonTextPrimary]}>
+          <Text style={[globalStyles.interactionButtonText, 
+                        isFollowing ? 
+                        globalStyles.pressedInteractionText :
+                        globalStyles.primaryInteractionText]}>
             {isFollowing ? 'Seguindo' : 'Seguir'}
           </Text>
         </TouchableOpacity>
@@ -64,57 +70,3 @@ export function UserCard({ user, onPress, initialIsFollowing = false, isCurrentU
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    padding: 12, 
-    backgroundColor: colors.backgroundDark, 
-    borderRadius: 12, 
-    marginBottom: 8,
-  },
-  avatar: { 
-    width: 50, 
-    height: 50, 
-    borderRadius: 8 
-  },
-  info: { 
-    flex: 1,
-    marginLeft: 12 
-  },
-  name: { 
-    color: colors.textPrimaryDark, 
-    fontWeight: 'bold' 
-  },
-  username: { 
-    color: colors.textSecondary, 
-  },
-  followButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 90,
-  },
-  followButtonPrimary: {
-    backgroundColor: colors.orangePrimary,
-    borderColor: colors.orangePrimary,
-  },
-  followingButton: {
-    backgroundColor: 'transparent',
-    borderColor: colors.textSecondary,
-  },
-  followButtonText: {
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  followButtonTextPrimary: {
-    color: '#FFF',
-  },
-  followingButtonText: {
-    color: colors.textPrimaryDark,
-  },
-});

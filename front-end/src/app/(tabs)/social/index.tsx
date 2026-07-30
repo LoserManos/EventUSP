@@ -1,7 +1,7 @@
 // src/app/(tabs)/index.tsx
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { colors, globalStyles } from '@/styles/global';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { globalStyles } from '@/styles/global';
 import SearchBar from '@/components/SearchBar';
 import { UserFeed } from '@/components/UserFeed';
 import { OrgFeed } from '@/components/OrgFeed';
@@ -21,19 +21,27 @@ export default function SocialPage() {
       </View>
 
       {/* Botões de Seleção de Abas */}
-      <View style={styles.tabButtons}>
+      <View style={globalStyles.buttonsTab}>
         <TouchableOpacity 
-          style={[styles.button, type === 'user' && styles.activeButton]} 
+          style={[globalStyles.interactionButton,
+                  globalStyles.pressedInteractionButton,
+                  type === 'user' && globalStyles.orangeInteractionButton]} 
           onPress={() => { setType('user'); setSearchQuery(''); }}
         >
-          <Text style={[styles.buttonText, type === 'user' && styles.activeButtonText]}>Usuários</Text>
+          <Text style={[globalStyles.interactionButtonText,
+                        globalStyles.pressedInteractionText,
+                        type === 'user' && globalStyles.primaryInteractionText]}>Usuários</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.button, type === 'org' && styles.activeButton]} 
+          style={[globalStyles.interactionButton,
+                  globalStyles.pressedInteractionButton,
+                  type === 'org' && globalStyles.orangeInteractionButton]} 
           onPress={() => { setType('org'); setSearchQuery(''); }}
         >
-          <Text style={[styles.buttonText, type === 'org' && styles.activeButtonText]}>Organizações</Text>
+          <Text style={[globalStyles.interactionButtonText,
+                        globalStyles.pressedInteractionText,
+                        type === 'org' && globalStyles.primaryInteractionText]}>Organizações</Text>
         </TouchableOpacity>
       </View>
 
@@ -46,28 +54,3 @@ export default function SocialPage() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  tabButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 15,
-    gap: 10,
-  },
-  button: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundDarkSecondary,
-  },
-  activeButton: {
-    backgroundColor: colors.orangePrimary,
-  },
-  buttonText: {
-    color: colors.textSecondary,
-    fontWeight: 'bold',
-  },
-  activeButtonText: {
-    color: '#FFF',
-  }
-});
